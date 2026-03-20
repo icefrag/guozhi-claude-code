@@ -1,38 +1,38 @@
 ---
-description: Analyze a draft prompt and output an optimized, ECC-enriched version ready to paste and run. Does NOT execute the task — outputs advisory analysis only.
+description: 分析草稿prompt并输出优化后的ECC增强版本，可直接复制运行。不执行任务 —— 仅输出分析建议。
 ---
 
 # /prompt-optimize
 
-Analyze and optimize the following prompt for maximum ECC leverage.
+分析并优化以下prompt以最大化利用ECC能力。
 
-## Your Task
+## 你的任务
 
-Apply the **prompt-optimizer** skill to the user's input below. Follow the 6-phase analysis pipeline:
+对用户的输入应用 **prompt-optimizer** 技能。遵循6阶段分析流程：
 
-0. **Project Detection** — Read CLAUDE.md, detect tech stack from project files (package.json, go.mod, pyproject.toml, etc.)
-1. **Intent Detection** — Classify the task type (new feature, bug fix, refactor, research, testing, review, documentation, infrastructure, design)
-2. **Scope Assessment** — Evaluate complexity (TRIVIAL / LOW / MEDIUM / HIGH / EPIC), using codebase size as signal if detected
-3. **ECC Component Matching** — Map to specific skills, commands, agents, and model tier
-4. **Missing Context Detection** — Identify gaps. If 3+ critical items missing, ask the user to clarify before generating
-5. **Workflow & Model** — Determine lifecycle position, recommend model tier, and split into multiple prompts if HIGH/EPIC
+0. **项目检测** — 读取CLAUDE.md，从项目文件（package.json、go.mod、pyproject.toml等）检测技术栈
+1. **意图检测** — 分类任务类型（新功能、bug修复、重构、研究、测试、审查、文档、基础设施、设计）
+2. **范围评估** — 评估复杂度（TRIVIAL / LOW / MEDIUM / HIGH / EPIC），如检测到代码库大小则作为参考信号
+3. **ECC组件匹配** — 映射到具体的技能、命令、代理和模型层级
+4. **缺失上下文检测** — 识别缺口。如缺少3个以上关键项，在生成前请用户澄清
+5. **工作流与模型** — 确定生命周期位置，推荐模型层级，如为HIGH/EPIC则拆分为多个prompt
 
-## Output Requirements
+## 输出要求
 
-- Present diagnosis, recommended ECC components, and an optimized prompt using the Output Format from the prompt-optimizer skill
-- Provide both **Full Version** (detailed) and **Quick Version** (compact, varied by intent type)
-- Respond in the same language as the user's input
-- The optimized prompt must be complete and ready to copy-paste into a new session
-- End with a footer offering adjustment or a clear next step for starting a separate execution request
+- 使用prompt-optimizer技能的输出格式呈现诊断、推荐的ECC组件和优化后的prompt
+- 提供**完整版**（详细）和**精简版**（紧凑，根据意图类型变化）
+- 使用与用户输入相同的语言回复
+- 优化后的prompt必须完整且可直接复制粘贴到新会话
+- 结尾提供页脚，提供调整选项或明确的下一步以启动单独的执行请求
 
-## CRITICAL
+## 关键说明
 
-Do NOT execute the user's task. Output ONLY the analysis and optimized prompt.
-If the user asks for direct execution, explain that `/prompt-optimize` only produces advisory output and tell them to start a normal task request instead.
+**不要**执行用户的任务。**仅**输出分析和优化后的prompt。
+如果用户要求直接执行，说明 `/prompt-optimize` 仅产生建议输出，告诉他们改为启动正常的任务请求。
 
-Note: `blueprint` is a **skill**, not a slash command. Write "Use the blueprint skill"
-instead of presenting it as a `/...` command.
+注意：`blueprint` 是**技能**，不是斜杠命令。请写"使用 blueprint 技能"
+而不是将其呈现为 `/...` 命令。
 
-## User Input
+## 用户输入
 
 $ARGUMENTS

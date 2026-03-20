@@ -1,160 +1,160 @@
 ---
-description: Sequential and tmux/worktree orchestration guidance for multi-agent workflows.
+description: 多代理工作流的顺序和 tmux/worktree 编排指南。
 ---
 
-# Orchestrate Command
+# Orchestrate 命令
 
-Sequential agent workflow for complex tasks.
+用于复杂任务的顺序agent工作流。
 
-## Usage
+## 使用方法
 
-`/orchestrate [workflow-type] [task-description]`
+`/orchestrate [工作流类型] [任务描述]`
 
-## Workflow Types
+## 工作流类型
 
 ### feature
-Full feature implementation workflow:
+完整功能实现工作流：
 ```
 planner -> tdd-guide -> code-reviewer -> security-reviewer
 ```
 
 ### bugfix
-Bug investigation and fix workflow:
+Bug 调查和修复工作流：
 ```
 planner -> tdd-guide -> code-reviewer
 ```
 
 ### refactor
-Safe refactoring workflow:
+安全重构工作流：
 ```
 architect -> code-reviewer -> tdd-guide
 ```
 
 ### security
-Security-focused review:
+安全专注审查：
 ```
 security-reviewer -> code-reviewer -> architect
 ```
 
-## Execution Pattern
+## 执行模式
 
-For each agent in the workflow:
+对于工作流中的每个代理：
 
-1. **Invoke agent** with context from previous agent
-2. **Collect output** as structured handoff document
-3. **Pass to next agent** in chain
-4. **Aggregate results** into final report
+1. **调用代理**，传入前一代理的上下文
+2. **收集输出**为结构化交接文档
+3. **传递给下一个代理**
+4. **汇总结果**到最终报告
 
-## Handoff Document Format
+## 交接文档格式
 
-Between agents, create handoff document:
+代理之间创建交接文档：
 
 ```markdown
-## HANDOFF: [previous-agent] -> [next-agent]
+## HANDOFF: [前一代理] -> [下一代理]
 
-### Context
-[Summary of what was done]
+### 上下文
+[已完成工作的摘要]
 
-### Findings
-[Key discoveries or decisions]
+### 发现
+[关键发现或决策]
 
-### Files Modified
-[List of files touched]
+### 已修改文件
+[涉及的文件列表]
 
-### Open Questions
-[Unresolved items for next agent]
+### 待解决问题
+[留给下一代理的未决项]
 
-### Recommendations
-[Suggested next steps]
+### 建议
+[建议的后续步骤]
 ```
 
-## Example: Feature Workflow
+## 示例：功能工作流
 
 ```
-/orchestrate feature "Add user authentication"
+/orchestrate feature "添加用户认证"
 ```
 
-Executes:
+执行流程：
 
-1. **Planner Agent**
-   - Analyzes requirements
-   - Creates implementation plan
-   - Identifies dependencies
-   - Output: `HANDOFF: planner -> tdd-guide`
+1. **Planner 代理**
+   - 分析需求
+   - 创建实现计划
+   - 识别依赖
+   - 输出：`HANDOFF: planner -> tdd-guide`
 
-2. **TDD Guide Agent**
-   - Reads planner handoff
-   - Writes tests first
-   - Implements to pass tests
-   - Output: `HANDOFF: tdd-guide -> code-reviewer`
+2. **TDD Guide 代理**
+   - 读取 planner 交接文档
+   - 先编写测试
+   - 实现以通过测试
+   - 输出：`HANDOFF: tdd-guide -> code-reviewer`
 
-3. **Code Reviewer Agent**
-   - Reviews implementation
-   - Checks for issues
-   - Suggests improvements
-   - Output: `HANDOFF: code-reviewer -> security-reviewer`
+3. **Code Reviewer 代理**
+   - 审查实现
+   - 检查问题
+   - 提出改进建议
+   - 输出：`HANDOFF: code-reviewer -> security-reviewer`
 
-4. **Security Reviewer Agent**
-   - Security audit
-   - Vulnerability check
-   - Final approval
-   - Output: Final Report
+4. **Security Reviewer 代理**
+   - 安全审计
+   - 漏洞检查
+   - 最终审批
+   - 输出：最终报告
 
-## Final Report Format
+## 最终报告格式
 
 ```
 ORCHESTRATION REPORT
 ====================
 Workflow: feature
-Task: Add user authentication
+Task: 添加用户认证
 Agents: planner -> tdd-guide -> code-reviewer -> security-reviewer
 
 SUMMARY
 -------
-[One paragraph summary]
+[一段话摘要]
 
 AGENT OUTPUTS
 -------------
-Planner: [summary]
-TDD Guide: [summary]
-Code Reviewer: [summary]
-Security Reviewer: [summary]
+Planner: [摘要]
+TDD Guide: [摘要]
+Code Reviewer: [摘要]
+Security Reviewer: [摘要]
 
 FILES CHANGED
 -------------
-[List all files modified]
+[所有已修改文件列表]
 
 TEST RESULTS
 ------------
-[Test pass/fail summary]
+[测试通过/失败摘要]
 
 SECURITY STATUS
 ---------------
-[Security findings]
+[安全发现]
 
 RECOMMENDATION
 --------------
-[SHIP / NEEDS WORK / BLOCKED]
+[可发布 / 需要修改 / 阻塞]
 ```
 
-## Parallel Execution
+## 并行执行
 
-For independent checks, run agents in parallel:
+对于独立检查，可并行运行代理：
 
 ```markdown
-### Parallel Phase
-Run simultaneously:
-- code-reviewer (quality)
-- security-reviewer (security)
-- architect (design)
+### 并行阶段
+同时运行：
+- code-reviewer（质量）
+- security-reviewer（安全）
+- architect（设计）
 
-### Merge Results
-Combine outputs into single report
+### 合并结果
+将输出合并为单一报告
 ```
 
-For external tmux-pane workers with separate git worktrees, use `node scripts/orchestrate-worktrees.js plan.json --execute`. The built-in orchestration pattern stays in-process; the helper is for long-running or cross-harness sessions.
+对于使用独立 git worktree 的外部 tmux-pane 工作器，使用 `node scripts/orchestrate-worktrees.js plan.json --execute`。内置编排模式保持在进程内；该辅助脚本用于长时间运行或跨 harness 会话的场景。
 
-When workers need to see dirty or untracked local files from the main checkout, add `seedPaths` to the plan file. ECC overlays only those selected paths into each worker worktree after `git worktree add`, which keeps the branch isolated while still exposing in-flight local scripts, plans, or docs.
+当工作器需要查看主检出中的脏文件或未跟踪文件时，在计划文件中添加 `seedPaths`。ECC 仅将这些选定路径覆盖到每个工作器 worktree 中（在 `git worktree add` 之后），这样既保持分支隔离，又能暴露进行中的本地脚本、计划或文档。
 
 ```json
 {
@@ -165,67 +165,67 @@ When workers need to see dirty or untracked local files from the main checkout, 
     ".claude/plan/workflow-e2e-test.json"
   ],
   "workers": [
-    { "name": "docs", "task": "Update orchestration docs." }
+    { "name": "docs", "task": "更新编排文档。" }
   ]
 }
 ```
 
-To export a control-plane snapshot for a live tmux/worktree session, run:
+要导出实时 tmux/worktree 会话的控制平面快照，运行：
 
 ```bash
 node scripts/orchestration-status.js .claude/plan/workflow-visual-proof.json
 ```
 
-The snapshot includes session activity, tmux pane metadata, worker states, objectives, seeded overlays, and recent handoff summaries in JSON form.
+快照包含会话活动、tmux pane 元数据、工作器状态、目标、种子覆盖和最近的交接摘要，以 JSON 形式呈现。
 
-## Operator Command-Center Handoff
+## 操作员控制中心交接
 
-When the workflow spans multiple sessions, worktrees, or tmux panes, append a control-plane block to the final handoff:
+当工作流跨越多个会话、worktree 或 tmux pane 时，在最终交接文档中附加控制面块：
 
 ```markdown
 CONTROL PLANE
 -------------
 Sessions:
-- active session ID or alias
-- branch + worktree path for each active worker
-- tmux pane or detached session name when applicable
+- 活动会话 ID 或别名
+- 每个活动工作器的分支 + worktree 路径
+- tmux pane 或分离会话名称（如适用）
 
 Diffs:
-- git status summary
-- git diff --stat for touched files
-- merge/conflict risk notes
+- git status 摘要
+- 涉及文件的 git diff --stat
+- 合并/冲突风险说明
 
 Approvals:
-- pending user approvals
-- blocked steps awaiting confirmation
+- 待用户审批项
+- 等待确认的阻塞步骤
 
 Telemetry:
-- last activity timestamp or idle signal
-- estimated token or cost drift
-- policy events raised by hooks or reviewers
+- 最后活动时间戳或空闲信号
+- 预估 token 或成本消耗
+- hooks 或审查器触发的策略事件
 ```
 
-This keeps planner, implementer, reviewer, and loop workers legible from the operator surface.
+这使 planner、implementer、reviewer 和循环工作器在操作员界面上清晰可见。
 
-## Arguments
+## 参数
 
 $ARGUMENTS:
-- `feature <description>` - Full feature workflow
-- `bugfix <description>` - Bug fix workflow
-- `refactor <description>` - Refactoring workflow
-- `security <description>` - Security review workflow
-- `custom <agents> <description>` - Custom agent sequence
+- `feature <描述>` - 完整功能工作流
+- `bugfix <描述>` - Bug 修复工作流
+- `refactor <描述>` - 重构工作流
+- `security <描述>` - 安全审查工作流
+- `custom <代理列表> <描述>` - 自定义代理序列
 
-## Custom Workflow Example
+## 自定义工作流示例
 
 ```
-/orchestrate custom "architect,tdd-guide,code-reviewer" "Redesign caching layer"
+/orchestrate custom "architect,tdd-guide,code-reviewer" "重新设计缓存层"
 ```
 
-## Tips
+## 提示
 
-1. **Start with planner** for complex features
-2. **Always include code-reviewer** before merge
-3. **Use security-reviewer** for auth/payment/PII
-4. **Keep handoffs concise** - focus on what next agent needs
-5. **Run verification** between agents if needed
+1. **复杂功能从 planner 开始**
+2. **合并前务必包含 code-reviewer**
+3. **涉及认证/支付/PII 时使用 security-reviewer**
+4. **保持交接文档简洁** - 聚焦下一代理所需内容
+5. **如需要在代理间运行验证**
