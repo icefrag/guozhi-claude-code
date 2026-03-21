@@ -46,6 +46,24 @@ entity.setId(IdWorker.getId());  // 必须
 userMapper.insert(entity);
 ```
 
+### 数据库表设计规范 (NON-NEGOTIABLE)
+
+所有数据库表必须包含以下基础字段：
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| id | BIGINT | 主键，使用IdWorker.getId()生成，禁止自增 |
+| create_time | DATETIME | 创建时间 |
+| update_time | DATETIME | 更新时间 |
+| created_by | BIGINT | 创建人ID |
+| updated_by | BIGINT | 更新人ID |
+| is_deleted | TINYINT | 逻辑删除标识（0-未删除，1-已删除） |
+
+**说明**：
+- 上述基础字段由BaseEntity统一定义，业务表Entity继承BaseEntity即可
+- 禁止在业务表Entity中重复定义上述字段
+- MyBatis-Plus逻辑删除插件会自动处理is_deleted字段
+
 ### Entity定义规范
 
 - **必须**: 所有Entity实体类继承`com.guozhi.api.framework.model.entity.BaseEntity`

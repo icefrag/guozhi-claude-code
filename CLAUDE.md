@@ -16,6 +16,7 @@
 | `/update-codemaps` | 更新代码地图 | - | - | - |
 | `/prompt-optimize` | Prompt优化 | - | prompt-optimizer | - |
 | `/update-rules` | 规则文件更新 | code-reviewer | - | - |
+| `/tech-design` | 技术设计文档生成 | - | tech-design | architecture, naming, coding-conventions |
 
 ## Agents
 
@@ -65,6 +66,7 @@
 | **e2e-testing** | 端到端测试 |
 | **blueprint** | 多会话工程项目规划 |
 | **prompt-optimizer** | Prompt优化分析 |
+| **tech-design** | 技术设计文档生成 |
 
 ### AI/代理相关
 
@@ -102,14 +104,17 @@
 
 | Rule文件 | 描述 | 被谁使用 |
 |---------|------|---------|
-| **architecture.md** | 分层架构、模块化设计、包结构、URI规范 | planner, architect, tdd-guide, code-reviewer, build-error-resolver |
-| **naming.md** | Entity/Service/枚举/参数命名规范 | planner, architect, tdd-guide, code-reviewer, build-error-resolver |
-| **coding-conventions.md** | Spring注入、数据持久化、工具类使用等开发规范 | tdd-guide, code-reviewer, security-reviewer, build-error-resolver |
+| **architecture.md** | 分层架构、模块化设计、包结构、URI规范 | planner, architect, tdd-guide, code-reviewer, build-error-resolver, tech-design |
+| **naming.md** | Entity/Service/枚举/参数命名规范 | planner, architect, tdd-guide, code-reviewer, build-error-resolver, tech-design |
+| **coding-conventions.md** | Spring注入、数据持久化、工具类使用等开发规范 | tdd-guide, code-reviewer, security-reviewer, build-error-resolver, tech-design |
 
 ## 工作流依赖图
 
 ```
 设计阶段:
+  /tech-design ───> tech-design ──────> architecture.md + naming.md + coding-conventions.md
+       │
+       ▼
   /plan ──────────> planner ──────────> architecture.md + naming.md
                                             │
                                             ▼
@@ -131,6 +136,7 @@
 
 | 场景 | 推荐Rule | 说明 |
 |------|---------|------|
+| 技术设计文档 | architecture + naming + coding-conventions | 架构图、API设计、数据库模型设计 |
 | 新功能设计 | architecture + naming | 确定包结构、类命名、接口设计 |
 | 编码实现 | all rules | 完整的开发规范 |
 | 代码审查 | all rules | 检查是否符合规范 |
@@ -157,7 +163,7 @@
 ### rules/common/coding-conventions.md
 - Spring依赖注入规范
 - Lombok @Builder使用规范
-- 数据持久化规范 (ID生成/更新/查询)
+- 数据持久化规范 (ID生成/表设计/更新/查询)
 - JSON操作规范 (JsonUtil)
 - 枚举工具类规范 (EnumUtil)
 - 异常处理规范
