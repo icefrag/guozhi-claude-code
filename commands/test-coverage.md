@@ -2,6 +2,76 @@
 
 分析测试覆盖率，识别缺口，生成缺失的测试以达到80%+覆盖率。
 
+## 步骤0：识别测试范围（关键）
+
+### ✅ 必须测试（100%覆盖目标）
+
+| 类型 | 包路径模式 | 测试方式 | 原因 |
+|------|-----------|----------|------|
+| **Service层** | `**/service/impl/*Impl.java` | 单元测试 | 核心业务逻辑 |
+| **Manager层** | `**/service/manager/impl/*Impl.java` | 单元测试 | 外部集成逻辑 |
+| **Controller层** | `**/controller/*.java` | 集成测试 | API契约验证 |
+| **工具类** | `**/utils/*.java`（含复杂逻辑） | 单元测试 | 跨服务复用 |
+| **财务计算** | 所有含计算逻辑的类 | 单元测试 | 高风险 |
+| **认证授权** | `**/security/**/*.java` | 单元测试 | 安全关键 |
+
+### 🚫 排除测试（不计入覆盖率）
+
+| 类型 | 包路径模式 | 原因 |
+|------|-----------|------|
+| **Entity类** | `**/model/entity/*.java` | 纯数据载体，无逻辑 |
+| **DTO类** | `**/model/dto/*.java` | 纯数据载体，通过其他测试间接覆盖 |
+| **Req/Resp/Query** | `**/model/request/*.java`<br>`**/model/response/*.java`<br>`**/model/query/*.java` | POJO，通过Controller测试间接覆盖 |
+| **枚举类** | `**/enums/*.java` | 纯定义，无业务逻辑 |
+| **常量类** | `**/constants/*.java` | 仅静态常量 |
+| **配置类** | `**/config/**` | Spring管理，无业务逻辑 |
+| **Mapper层** | `**/mapper/**/*.java` | 框架生成实现，通过集成测试间接覆盖 |
+| **MyBatis拦截器** | `**/*.java`（implements Interceptor） | MyBatis插件框架，通过集成测试覆盖 |
+| **定时任务** | `**/job/*.java` | 通过集成测试覆盖 |
+| **启动类** | `*Application.java` | 无测试价值 |
+| **事件类** | `**/*Event.java` | 纯数据载体，无业务逻辑 |
+| **事件监听器** | `**/listener/*Listener.java` | Spring框架管理，通过集成测试覆盖 |
+| **消息队列监听器** | `**/messagequeue/**`<br>`**/mq/**` | MQ框架管理，需要真实环境 |
+
+### JaCoCo排除配置
+
+在`pom.xml`中配置排除：
+
+```xml
+<plugin>
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <configuration>
+        <excludes>
+            <!-- Entity/DTO/VO -->
+            <exclude>**/model/entity/**</exclude>
+            <exclude>**/model/dto/**</exclude>
+            <exclude>**/model/enums/**</exclude>
+            <exclude>**/model/request/**</exclude>
+            <exclude>**/model/response/**</exclude>
+            <exclude>**/model/query/**</exclude>
+            <!-- Mapper层 -->
+            <exclude>**/mapper/**</exclude>
+            <!-- MyBatis拦截器 -->
+            <exclude>**/*Interceptor.class</exclude>
+            <!-- 事件类 -->
+            <exclude>**/*Event.class</exclude>
+            <!-- 监听器 -->
+            <exclude>**/listener/**</exclude>
+            <!-- 消息队列 -->
+            <exclude>**/messagequeue/**</exclude>
+            <exclude>**/mq/**</exclude>
+            <!-- 配置类 -->
+            <exclude>**/config/**</exclude>
+            <!-- 常量类 -->
+            <exclude>**/constants/**</exclude>
+            <!-- 启动类 -->
+            <exclude>**/*Application.class</exclude>
+        </excludes>
+    </configuration>
+</plugin>
+```
+
 ## 步骤1：检测测试框架
 
 | 标识 | 覆盖率命令 |
@@ -13,7 +83,7 @@
 
 1. 运行覆盖率命令
 2. 解析输出（target/site/jacoco/jacoco.xml 或终端输出）
-3. 列出**低于80%覆盖率**的文件，按最差优先排序
+3. **过滤排除类后**，列出低于80%覆盖率的文件，按最差优先排序
 4. 对于每个覆盖率不足的文件，识别：
    - 未测试的方法
    - 缺失的分支覆盖（if/else、switch、异常路径）
@@ -23,18 +93,126 @@
 
 对于每个覆盖率不足的文件，按以下优先级生成测试：
 
-1. **成功路径** — 核心功能使用有效输入
-2. **异常处理** — 无效输入、缺失数据、网络失败
-3. **边界案例** — 空集合、null、边界值（0、-1、MAX_VALUE）
-4. **分支覆盖** — 每个if/else、switch case
+### 测试优先级
+
+| 优先级 | 测试类型 | 覆盖目标 |
+|--------|----------|----------|
+| P0 | 成功路径 | 核心功能使用有效输入 |
+| P0 | 异常处理 | 无效输入、业务异常 |
+| P1 | 边界案例 | 空集合、null、边界值 |
+| P1 | 分支覆盖 | 每个if/else、switch case |
 
 ### 测试生成规则
 
-- 测试放在对应目录：`src/main/java/.../Service.java` → `src/test/java/.../ServiceTest.java`
+- **Service/Manager/Utils**：单元测试放在 `src/test/java/.../`
+- **Controller**：集成测试放在 `src/test/java/.../controller/`
 - 使用项目现有的测试模式（import风格、断言库、Mock方式）
 - Mock外部依赖（数据库、外部API、文件系统）
 - 每个测试应该独立 — 测试之间不共享可变状态
 - 测试命名描述性：`should_return_discount_when_order_amount_exceeds_threshold`
+
+### 各层测试模板
+
+#### Service/Manager层单元测试
+
+```java
+@ExtendWith(MockitoExtension.class)
+class XxxServiceImplTest {
+
+    @InjectMocks
+    private XxxServiceImpl xxxService;
+
+    @Mock
+    private DependencyMapper dependencyMapper;
+
+    @Mock
+    private ExternalManager externalManager;
+
+    @Test
+    void should_return_success_when_valid_input() {
+        // Given
+        InputDTO input = InputDTO.builder()
+            .field("value")
+            .build();
+        when(dependencyMapper.selectById(any())).thenReturn(mockEntity);
+
+        // When
+        OutputDTO result = xxxService.method(input);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("expected", result.getField());
+    }
+
+    @Test
+    void should_throw_business_exception_when_condition_not_met() {
+        // Given
+        InputDTO input = InputDTO.builder().build();
+
+        // When & Then
+        assertThrows(BusinessException.class, () -> {
+            xxxService.method(input);
+        });
+    }
+}
+```
+
+#### Controller层集成测试
+
+```java
+@SpringBootTest
+@AutoConfigureMockMvc
+class XxxControllerIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private ExternalService externalService; // Mock外部依赖
+
+    @Test
+    void should_return_200_when_valid_request() throws Exception {
+        // Given
+        XxxReq request = XxxReq.builder()
+            .field("value")
+            .build();
+        when(externalService.callExternal(any())).thenReturn(mockResponse);
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/xxx")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value("200"))
+            .andExpect(jsonPath("$.data.field").value("expected"));
+    }
+
+    @Test
+    void should_return_400_when_required_param_missing() throws Exception {
+        // When & Then
+        mockMvc.perform(post("/api/v1/xxx")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void should_return_500_when_service_throws_exception() throws Exception {
+        // Given
+        when(externalService.callExternal(any()))
+            .thenThrow(new RuntimeException("External service error"));
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/xxx")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(validRequest)))
+            .andExpect(status().is5xxServerError());
+    }
+}
+```
 
 ## 步骤4：验证
 
@@ -47,92 +225,37 @@
 显示前后对比：
 
 ```
-覆盖率报告
-──────────────────────────────────────
-文件                          之前   之后
-DiscountServiceImpl.java      45%    88%
-OrderServiceImpl.java         32%    82%
-UserServiceImpl.java          55%    85%
-──────────────────────────────────────
-总体覆盖率:                    67%    84%  ✅
+覆盖率报告（已排除Entity/DTO/Mapper/Config类）
+──────────────────────────────────────────────────
+文件                          之前   之后   状态
+──────────────────────────────────────────────────
+DiscountServiceImpl.java      45%    88%   ✅
+OrderServiceImpl.java         32%    82%   ✅
+OrderManagerImpl.java         55%    85%   ✅
+XxxController.java            40%    90%   ✅
+UserUtils.java                60%    92%   ✅
+──────────────────────────────────────────────────
+总体覆盖率:                    46%    87%   ✅
 ```
 
-## Java Web重点关注区域
+## 边界案例检查清单
 
-### Service层测试
-
-- 复杂分支的方法（高圈复杂度）
-- 异常处理器和catch块
-- 跨服务使用的工具方法
-- 业务规则验证
-
-### Controller层测试
-
-- 请求参数校验
-- 响应格式验证
-- 异常情况处理
-
-### Manager层测试
-
-- 外部服务调用Mock
-- 重试逻辑验证
-- 超时处理
-
-### 边界案例
-
-- null
-- 空字符串
-- 空集合
-- 零
-- 负数
-- 最大值/最小值
-
-## JUnit 5 + Mockito测试模板
-
-```java
-@ExtendWith(MockitoExtension.class)
-class XxxServiceImplTest {
-
-    @InjectMocks
-    private XxxServiceImpl xxxService;
-
-    @Mock
-    private DependencyService dependencyService;
-
-    @Test
-    void should_return_success_when_valid_input() {
-        // Given
-        InputDTO input = InputDTO.builder()
-            .field("value")
-            .build();
-        when(dependencyService.method()).thenReturn(expected);
-
-        // When
-        OutputDTO result = xxxService.method(input);
-
-        // Then
-        assertNotNull(result);
-        assertEquals("expected", result.getField());
-    }
-
-    @Test
-    void should_throw_exception_when_input_is_null() {
-        // When & Then
-        assertThrows(IllegalArgumentException.class, () -> {
-            xxxService.method(null);
-        });
-    }
-}
-```
+| 类型 | 测试值 |
+|------|--------|
+| 引用类型 | `null` |
+| 字符串 | `""`, `"  "`, 超长字符串 |
+| 集合 | 空集合, 单元素, 大集合 |
+| 数字 | `0`, `-1`, `Integer.MAX_VALUE`, `Integer.MIN_VALUE` |
+| 日期 | 过去, 现在, 未来, 边界日期 |
 
 ## 覆盖率目标
 
-- **最低80%** 适用于所有代码
-- **必需100%** 适用于：
-  - 财务计算
-  - 认证逻辑
-  - 安全关键代码
-  - 核心业务逻辑
+| 代码类型 | 目标覆盖率 | 测试方式 |
+|----------|-----------|----------|
+| 财务计算、认证、安全 | **100%** | 单元测试 |
+| Service/Manager业务逻辑 | **80%+** | 单元测试 |
+| Controller层 | **80%+** | 集成测试 |
+| 工具类 | **80%+** | 单元测试 |
 
 ## JaCoCo报告位置
 
@@ -155,6 +278,9 @@ mvn test jacoco:report
 
 # 运行指定测试类
 mvn test -Dtest=XxxServiceImplTest jacoco:report
+
+# 仅运行Controller集成测试
+mvn test -Dtest="*ControllerIntegrationTest" jacoco:report
 
 # 查看覆盖率摘要
 mvn jacoco:report
