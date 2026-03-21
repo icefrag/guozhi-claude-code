@@ -1,9 +1,18 @@
 ---
 name: springboot-patterns
 description: Spring Boot架构模式、REST API设计、分层服务、数据访问、缓存、异步处理和日志。用于Java Spring Boot后端开发。
+rules:
+  - rules/common/architecture.md
+  - rules/common/naming.md
+  - rules/common/coding-conventions.md
 ---
 
 # Spring Boot开发模式
+
+> **相关规则**: 此skill依赖项目规则文件，确保以下规则已加载：
+> - `rules/common/architecture.md` - 分层架构、模块化设计、包结构规范
+> - `rules/common/naming.md` - Entity/Service/枚举等命名规范
+> - `rules/common/coding-conventions.md` - Spring注入、数据持久化、工具类使用规范
 
 用于可扩展、生产级服务的Spring Boot架构和API模式。
 

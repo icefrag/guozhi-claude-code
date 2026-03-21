@@ -1,9 +1,14 @@
 ---
 name: springboot-security
 description: Spring Security最佳实践，涵盖认证/授权、输入验证、CSRF、密钥管理、安全头、限流和依赖安全，用于Java Spring Boot服务。
+rules:
+  - rules/common/coding-conventions.md
 ---
 
 # Spring Boot安全审查
+
+> **相关规则**: 此skill依赖项目规则文件，确保以下规则已加载：
+> - `rules/common/coding-conventions.md` - 业务异常处理、JSON操作等规范
 
 在添加认证、处理输入、创建端点或处理密钥时使用。
 

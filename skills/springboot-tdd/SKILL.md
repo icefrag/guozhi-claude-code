@@ -1,9 +1,18 @@
 ---
 name: springboot-tdd
 description: Spring Boot测试驱动开发，使用JUnit 5、Mockito、MockMvc、Testcontainers和JaCoCo。在添加功能、修复bug或重构时使用。
+rules:
+  - rules/common/architecture.md
+  - rules/common/naming.md
+  - rules/common/coding-conventions.md
 ---
 
 # Spring Boot TDD工作流
+
+> **相关规则**: 此skill依赖项目规则文件，确保以下规则已加载：
+> - `rules/common/architecture.md` - 分层架构、包结构规范（确定测试文件位置）
+> - `rules/common/naming.md` - 测试类命名规范
+> - `rules/common/coding-conventions.md` - 测试规范（按需开发）
 
 Spring Boot服务的TDD指南，要求80%以上覆盖率（单元测试 + 集成测试）。
 
