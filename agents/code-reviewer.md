@@ -2,7 +2,6 @@
 name: code-reviewer
 description: Java和Spring Boot代码审查专家，精通分层架构、JPA模式、安全性和并发性。所有Java代码变更必须使用此代理。Spring Boot项目必须使用。
 tools: ["Read", "Grep", "Glob", "Bash"]
-model: sonnet
 rules:
   - rules/common/architecture.md
   - rules/common/naming.md

@@ -2,7 +2,6 @@
 name: doc-updater
 description: 文档和代码地图专家。主动用于更新代码地图和文档。运行 /update-codemaps 和 /update-docs，生成 docs/CODEMAPS/*，更新 README 和指南。
 tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
-model: haiku
 ---
 
 # 文档与代码地图专家

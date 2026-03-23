@@ -2,7 +2,6 @@
 name: refactor-cleaner
 description: Java Web 死代码清理和重构专家。主动用于移除未使用代码、重复代码和重构优化。运行Maven分析工具识别死代码并安全移除。
 tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
-model: sonnet
 ---
 
 # 重构与死代码清理专家

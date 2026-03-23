@@ -20,16 +20,16 @@
 
 ## Agents
 
-| Agent | 描述 | 依赖Skill | 依赖Rule | 模型 |
-|-------|------|----------|---------|------|
-| **planner** | 复杂功能和重构规划 | - | architecture, naming | opus |
-| **architect** | 系统设计和架构决策 | - | architecture, naming | opus |
-| **tdd-guide** | 测试驱动开发 | springboot-tdd | architecture, naming, coding-conventions | sonnet |
-| **code-reviewer** | Java/Spring Boot代码审查 | springboot-patterns | architecture, naming, coding-conventions | sonnet |
-| **security-reviewer** | 安全漏洞检测与修复 | springboot-security | coding-conventions | sonnet |
-| **build-error-resolver** | 构建错误修复 | springboot-patterns | architecture, naming, coding-conventions | sonnet |
-| **refactor-cleaner** | 死代码清理 | - | - | sonnet |
-| **doc-updater** | 文档和代码地图更新 | - | - | haiku |
+| Agent | 描述 | 依赖Skill | 依赖Rule |
+|-------|------|----------|---------|
+| **planner** | 复杂功能和重构规划 | - | architecture, naming |
+| **architect** | 系统设计和架构决策 | - | architecture, naming |
+| **tdd-guide** | 测试驱动开发 | springboot-tdd | architecture, naming, coding-conventions |
+| **code-reviewer** | Java/Spring Boot代码审查 | springboot-patterns | architecture, naming, coding-conventions |
+| **security-reviewer** | 安全漏洞检测与修复 | springboot-security | coding-conventions |
+| **build-error-resolver** | 构建错误修复 | springboot-patterns | architecture, naming, coding-conventions |
+| **refactor-cleaner** | 死代码清理 | - | - |
+| **doc-updater** | 文档和代码地图更新 | - | - |
 
 ## Skills
 

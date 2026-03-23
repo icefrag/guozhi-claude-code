@@ -2,7 +2,6 @@
 name: architect
 description: 系统设计、可扩展性和技术决策的软件架构专家。在规划新功能、重构大型系统或做出架构决策时主动使用。
 tools: ["Read", "Grep", "Glob"]
-model: opus
 rules:
   - rules/common/architecture.md
   - rules/common/naming.md

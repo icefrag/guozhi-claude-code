@@ -2,7 +2,6 @@
 name: security-reviewer
 description: Java Web安全漏洞检测与修复专家。在编写处理用户输入、认证、API端点或敏感数据的代码后主动使用。检测密钥、SSRF、注入、不安全加密及OWASP Top 10漏洞。
 tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
-model: sonnet
 rules:
   - rules/common/coding-conventions.md
 ---

@@ -2,7 +2,6 @@
 name: build-error-resolver
 description: Java/Maven/Gradle构建、编译和依赖错误解决专家。修复构建错误、Java编译器错误和Maven/Gradle问题，仅用最小改动。在Java或Spring Boot构建失败时使用。
 tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
-model: sonnet
 rules:
   - rules/common/architecture.md
   - rules/common/naming.md
