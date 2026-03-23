@@ -63,6 +63,7 @@ userMapper.insert(entity);
 - 上述基础字段由BaseEntity统一定义，业务表Entity继承BaseEntity即可
 - 禁止在业务表Entity中重复定义上述字段
 - MyBatis-Plus逻辑删除插件会自动处理is_deleted字段
+- 所有字段不允许为空，必须设置默认值：字符串类型默认值为''，数字类型默认值为0
 
 ### Entity定义规范
 
