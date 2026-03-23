@@ -29,6 +29,7 @@
 | **security-reviewer** | 安全漏洞检测与修复 | springboot-security | coding-conventions | sonnet |
 | **build-error-resolver** | 构建错误修复 | springboot-patterns | architecture, naming, coding-conventions | sonnet |
 | **refactor-cleaner** | 死代码清理 | - | - | sonnet |
+| **doc-updater** | 文档和代码地图更新 | - | - | haiku |
 
 ## Skills
 
@@ -43,62 +44,34 @@
 | **java-coding-standards** | Java编码标准 |
 | **jpa-patterns** | JPA持久化模式 |
 
-### Python
-
-| Skill | 描述 |
-|-------|------|
-| **python-patterns** | Python设计模式和最佳实践 |
-| **python-testing** | Python测试工作流 |
-
 ### 通用/语言无关
 
 | Skill | 描述 |
 |-------|------|
-| **api-design** | REST API设计规范 |
-| **backend-patterns** | 后端架构模式 |
-| **coding-standards** | 通用编码标准 |
-| **tdd-workflow** | 测试驱动开发工作流 |
-| **security-scan** | 安全扫描和检查 |
-| **docker-patterns** | Docker容器化模式 |
-| **deployment-patterns** | 部署模式和策略 |
-| **database-migrations** | 数据库迁移模式 |
-| **mcp-server-patterns** | MCP服务器模式 |
-| **e2e-testing** | 端到端测试 |
 | **blueprint** | 多会话工程项目规划 |
 | **prompt-optimizer** | Prompt优化分析 |
 | **tech-design** | 技术设计文档生成 |
+| **coding-standards** | 通用编码标准 |
 
 ### AI/代理相关
 
 | Skill | 描述 |
 |-------|------|
-| **agentic-engineering** | 代理工程模式 |
-| **agent-harness-construction** | 代理框架构建 |
 | **continuous-learning** | 持续学习机制 |
-| **continuous-learning-v2** | 持续学习v2 |
 | **continuous-agent-loop** | 持续代理循环 |
 | **autonomous-loops** | 自主循环模式 |
-| **ai-first-engineering** | AI优先工程 |
-| **ai-regression-testing** | AI回归测试 |
-| **claude-api** | Claude API集成 |
-| **claude-devfleet** | Claude代理舰队 |
-| **enterprise-agent-ops** | 企业级代理运维 |
 | **eval-harness** | 评估框架 |
 
 ### 工具/实用程序
 
 | Skill | 描述 |
 |-------|------|
-| **documentation-lookup** | 文档查找 |
 | **deep-research** | 深度研究 |
-| **exa-search** | Exa搜索集成 |
 | **search-first** | 搜索优先模式 |
-| **data-scraper-agent** | 数据抓取代理 |
 | **verification-loop** | 验证循环 |
 | **strategic-compact** | 战略精简 |
-| **dmux-workflows** | dmux工作流 |
 | **plankton-code-quality** | 代码质量检查 |
-| **configure-ecc** | ECC配置 |
+| **iterative-retrieval** | 迭代检索 |
 
 ## Rules
 
