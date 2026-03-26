@@ -175,9 +175,8 @@ digraph parallel_flow {
     "Fix spec issues" [shape=box];
     "Stage 2: Code Quality Review" [shape=diamond];
     "Fix quality issues" [shape=box];
-    "Rebase to main" [shape=box];
-    "Merge to main" [shape=box];
-    "Cleanup worktree" [shape=box];
+    "Rebase to base" [shape=box];
+    "Merge to base" [shape=box];
     "More agents pending?" [shape=diamond];
     "Level complete" [shape=box];
 
@@ -189,10 +188,9 @@ digraph parallel_flow {
     "Stage 1: Spec Review" -> "Stage 2: Code Quality Review" [label="passed"];
     "Stage 2: Code Quality Review" -> "Fix quality issues" [label="issues found"];
     "Fix quality issues" -> "Stage 2: Code Quality Review";
-    "Stage 2: Code Quality Review" -> "Rebase to main" [label="passed"];
-    "Rebase to main" -> "Merge to main";
-    "Merge to main" -> "Cleanup worktree";
-    "Cleanup worktree" -> "More agents pending?";
+    "Stage 2: Code Quality Review" -> "Rebase to base" [label="passed"];
+    "Rebase to base" -> "Merge to base";
+    "Merge to base" -> "More agents pending?";
     "More agents pending?" -> "Wait for any completion" [label="yes"];
     "More agents pending?" -> "Level complete" [label="no"];
 }
@@ -205,9 +203,10 @@ For each completed agent:
 1. **Stage 1: Spec Review** - Verify implementation matches spec
 2. **Stage 2: Code Quality Review** - Verify code quality
 3. **Fix Issues** - If either stage fails, implementer fixes and re-reviews
-4. **Rebase** - `git rebase main` (handle conflicts if any)
-5. **Merge** - `git merge --ff-only` into main
-6. **Cleanup** - Remove worktree and branch
+4. **Rebase** - `git rebase $base_branch` (handle conflicts if any)
+   - `$base_branch` is the branch we created worktrees from (e.g., main, dev, master)
+5. **Merge** - `git merge --ff-only $base_branch` into $base_branch
+6. **Keep worktree** - Cleanup will happen after all tasks complete in `finishing-a-development-branch`
 
 ### Error Handling
 

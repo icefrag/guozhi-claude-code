@@ -149,6 +149,47 @@ git worktree remove <worktree-path>
 
 **For Option 3:** Keep worktree.
 
+### Step 6: Batch Cleanup Parallel Worktrees
+
+After all parallel tasks are merged to base branch, clean up all parallel worktrees:
+
+```bash
+# Check if .worktrees directory exists
+if [ -d ".worktrees" ] && [ "$(ls -A .worktrees)" ]; then
+    echo "Cleaning up parallel task worktrees..."
+
+    # Get the base branch (the branch we merged into)
+    base_branch=$(git branch --show-current)
+
+    # For each worktree under .worktrees/
+    for wt_path in .worktrees/*/; do
+        # Skip if not a directory
+        [ -d "$wt_path" ] || continue
+
+        # Get the branch name for this worktree
+        worktree_branch=$(git -C "$wt_path" rev-parse --abbrev-ref HEAD 2>/dev/null)
+
+        if [ -n "$worktree_branch" ]; then
+            # Check if branch is merged to base branch
+            if git merge-base --is-ancestor "$worktree_branch" "$base_branch" 2>/dev/null; then
+                echo "Removing merged worktree: $wt_path (branch: $worktree_branch)"
+                git worktree remove "$wt_path" 2>/dev/null || true
+                # Try to delete the branch (use -D if already deleted via worktree remove)
+                git branch -d "$worktree_branch" 2>/dev/null || git branch -D "$worktree_branch" 2>/dev/null || true
+            else
+                echo "Skipping: $worktree_branch not yet merged to $base_branch"
+            fi
+        fi
+    done
+fi
+```
+
+**Note:**
+- Only worktrees in `.worktrees/` directory are cleaned up (parallel task convention)
+- Other worktrees outside `.worktrees/` are preserved
+- All parallel task branches should already be merged before reaching this step
+- If a branch is not merged, it's skipped (might be intentional or an error)
+
 ## Quick Reference
 
 | Option | Merge | Push | Keep Worktree | Cleanup Branch |
@@ -198,3 +239,5 @@ git worktree remove <worktree-path>
 
 **Pairs with:**
 - **using-git-worktrees** - Cleans up worktree created by that skill
+
+**Note:** In parallel mode, `subagent-driven-development` does NOT cleanup worktrees after each task. All parallel worktrees are cleaned up here in Step 6 after all tasks are merged.

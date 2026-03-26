@@ -131,7 +131,7 @@ done
 
 ### Cleanup Worktree After Merge
 
-After a task is merged to main:
+After a task is merged to base branch (note: for parallel mode, cleanup happens in finishing-a-development-branch):
 
 ```bash
 # Remove worktree

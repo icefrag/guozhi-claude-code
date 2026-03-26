@@ -14,7 +14,7 @@ Dispatch nbl:code-reviewer subagent to catch issues before they cascade. The rev
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before merge to main
+- Before merge to base branch
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
