@@ -25,6 +25,10 @@ $Targets = @{
         Source = Join-Path $ScriptDir "rules"
         Dest   = Join-Path $ClaudeUserDir "rules"
     }
+    "agents" = @{
+        Source = Join-Path $ScriptDir "agents"
+        Dest   = Join-Path $ClaudeUserDir "agents"
+    }
 }
 
 # 颜色辅助函数
@@ -217,12 +221,13 @@ function Show-MainMenu {
     Write-Host ("  2. commands - {0} 个文件" -f $counts["commands"]) -ForegroundColor Yellow
     Write-Host ("  3. skills - {0} 个文件" -f $counts["skills"]) -ForegroundColor Yellow
     Write-Host ("  4. rules - {0} 个文件" -f $counts["rules"]) -ForegroundColor Yellow
+    Write-Host ("  5. agents - {0} 个文件" -f $counts["agents"]) -ForegroundColor Yellow
     Write-Host "  0. 退出" -ForegroundColor Gray
     Write-Host ""
 
     do {
         $choice = Read-Host "请选择"
-    } while ($choice -notmatch "^[0-4]$")
+    } while ($choice -notmatch "^[0-5]$")
 
     return $choice
 }
@@ -260,7 +265,7 @@ while ($true) {
         Write-Host "全量同步完成: 共 $total 个文件" -ForegroundColor Green
     }
     else {
-        $keys = @("commands", "skills", "rules")
+        $keys = @("commands", "skills", "rules", "agents")
         $idx = [int]$choice - 2
         $key = $keys[$idx]
         $config = $Targets[$key]
