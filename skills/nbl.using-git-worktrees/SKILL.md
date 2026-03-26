@@ -15,38 +15,18 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 
 ## Directory Selection Process
 
-Follow this priority order:
+Always use `.worktrees/` (project-local, hidden). This is the preferred convention.
 
-### 1. Check Existing Directories
-
-```bash
-# Check in priority order
-ls -d .worktrees 2>/dev/null     # Preferred (hidden)
-ls -d worktrees 2>/dev/null      # Alternative
-```
-
-**If found:** Use that directory. If both exist, `.worktrees` wins.
-
-### 2. Check CLAUDE.md
+### 1. Check Existing Directory
 
 ```bash
-grep -i "worktree.*director" CLAUDE.md 2>/dev/null
+# Check if .worktrees exists
+ls -d .worktrees 2>/dev/null
 ```
 
-**If preference specified:** Use it without asking.
+**If found:** Use that directory.
 
-### 3. Ask User
-
-If no directory exists and no CLAUDE.md preference:
-
-```
-No worktree directory found. Where should I create worktrees?
-
-1. .worktrees/ (project-local, hidden)
-2. ~/.config/nbl/worktrees/<project-name>/ (global location)
-
-Which would you prefer?
-```
+**If NOT found:** Create `.worktrees/` directory.
 
 ## Safety Verification
 
@@ -83,15 +63,8 @@ project=$(basename "$(git rev-parse --show-toplevel)")
 ### 2. Create Worktree
 
 ```bash
-# Determine full path
-case $LOCATION in
-  .worktrees|worktrees)
-    path="$LOCATION/$BRANCH_NAME"
-    ;;
-  ~/.config/nbl/worktrees/*)
-    path="~/.config/nbl/worktrees/$project/$BRANCH_NAME"
-    ;;
-esac
+# Full path
+path=".worktrees/$BRANCH_NAME"
 
 # Create worktree with new branch
 git worktree add "$path" -b "$BRANCH_NAME"
@@ -188,9 +161,7 @@ git branch -d "${BRANCH}-task${task_id}"
 | Situation | Action |
 |-----------|--------|
 | `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md → Ask user |
+| `.worktrees/` does not exist | Create `.worktrees/` directory |
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
@@ -201,11 +172,6 @@ git branch -d "${BRANCH}-task${task_id}"
 
 - **Problem:** Worktree contents get tracked, pollute git status
 - **Fix:** Always use `git check-ignore` before creating project-local worktree
-
-### Assuming directory location
-
-- **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
 
 ### Proceeding with failing tests
 
@@ -239,11 +205,9 @@ Ready to implement auth feature
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
-- Assume directory location when ambiguous
-- Skip CLAUDE.md check
 
 **Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
+- Use `.worktrees/` directory
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
