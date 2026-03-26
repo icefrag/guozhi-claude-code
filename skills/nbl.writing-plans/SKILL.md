@@ -60,11 +60,40 @@ This structure informs the task decomposition. Each task should produce self-con
 ---
 ```
 
+## Task Dependencies
+
+Each task MUST include dependency information for parallel execution planning:
+
+### Required Fields
+
+**Dependencies:** `None` | `Task 1, Task 2, ...`
+- List task numbers this task depends on
+- Use `None` if task has no dependencies
+
+**Parallelizable:** `Yes` | `No (reason)`
+- `Yes` - Task can run in parallel with other independent tasks
+- `No (reason)` - Task must wait for dependencies, explain why
+
+### Task Granularity Rules (NON-NEGOTIABLE)
+
+**Rule:** One task = one independently testable feature unit
+
+| Type | Example | Allowed |
+|------|---------|---------|
+| ✅ Feature module | "User authentication module" | Yes |
+| ✅ Independent subsystem | "Logging service" | Yes |
+| ❌ By code layer | "Auth API" + "Auth Service" + "Auth Mapper" | No |
+| ❌ Too granular | "Add field X" + "Add field Y" | No |
+
+**Why:** Tasks split by code layer create artificial dependencies and merge conflicts. Split by feature boundaries instead.
+
 ## Task Structure
 
 ````markdown
 ### Task N: [Component Name]
 
+**Dependencies:** None | Task 1, Task 2
+**Parallelizable:** Yes | No (reason if No)
 **Files:**
 - Create: `exact/path/to/file.py`
 - Modify: `exact/path/to/existing.py:123-145`

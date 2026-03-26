@@ -141,6 +141,48 @@ Tests passing (<N> tests, 0 failures)
 Ready to implement <feature-name>
 ```
 
+## Batch Operations (Parallel Mode)
+
+When executing parallel tasks, create and manage multiple worktrees.
+
+### Create Multiple Worktrees
+
+```bash
+# For parallel tasks in a level
+for task_id in 1 3 5; do
+    git worktree add ".worktrees/${BRANCH}-task${task_id}" -b "${BRANCH}-task${task_id}"
+done
+```
+
+### Cleanup Worktree After Merge
+
+After a task is merged to main:
+
+```bash
+# Remove worktree
+git worktree remove ".worktrees/${BRANCH}-task${task_id}"
+# Delete branch
+git branch -d "${BRANCH}-task${task_id}"
+```
+
+### Naming Convention (Parallel Mode)
+
+```
+.worktrees/
+├── feature-auth-task1/      # Task 1 worktree
+├── feature-logging-task3/   # Task 3 worktree
+├── feature-audit-task4/     # Task 4 worktree
+└── feature-main/            # Base branch (optional)
+```
+
+**Format:** `{branch-prefix}-{task-name}-{task-id}`
+
+### Parallel Mode Integration
+
+- **subagent-driven-development (parallel mode)** - Creates batch worktrees for parallel tasks
+- Maximum 5 parallel worktrees at a time
+- Each worktree is cleaned up after its task is merged
+
 ## Quick Reference
 
 | Situation | Action |
