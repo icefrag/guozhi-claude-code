@@ -106,11 +106,11 @@ metadata:
 
 | 意图 | Commands | Skills | Agents |
 |------|----------|--------|--------|
-| 新功能 | /plan, /tdd, /code-review, /verify | springboot-tdd, verification-loop | planner, tdd-guide, code-reviewer |
-| Bug修复 | /tdd, /build-fix, /verify | springboot-tdd | tdd-guide, build-error-resolver |
+| 新功能 | /plan, /tdd, /code-review, /verify | test-driven-development, verification-loop | planner, tdd-guide, code-reviewer |
+| Bug修复 | /tdd, /build-fix, /verify | test-driven-development | tdd-guide, build-error-resolver |
 | 重构 | /refactor-clean, /code-review, /verify | verification-loop | refactor-cleaner, code-reviewer |
 | 研究 | /plan | search-first, iterative-retrieval | — |
-| 测试 | /tdd, /test-coverage | springboot-tdd | tdd-guide |
+| 测试 | /tdd, /test-coverage | test-driven-development | tdd-guide |
 | 审查 | /code-review | — | code-reviewer |
 | 文档 | /update-codemaps | — | doc-updater |
 | 设计（MEDIUM-HIGH） | /plan | — | planner, architect |
@@ -120,7 +120,7 @@ metadata:
 
 | 技术栈 | 需要添加的Skills | Agent |
 |--------|-----------------|-------|
-| Spring Boot / Java | springboot-patterns, springboot-tdd, springboot-security, springboot-verification, java-coding-standards, jpa-patterns | code-reviewer |
+| Spring Boot / Java | springboot-patterns, test-driven-development, springboot-security, springboot-verification, java-coding-standards, jpa-patterns | code-reviewer |
 | 其他/未列出 | coding-standards（通用） | code-reviewer |
 
 ### 阶段4：缺失上下文检测
@@ -182,7 +182,7 @@ metadata:
 | 类型 | 组件 | 用途 |
 |------|------|------|
 | Command | /plan | 编码前先规划架构 |
-| Skill | springboot-tdd | TDD方法论指导 |
+| Skill | test-driven-development | TDD方法论指导 |
 | Agent | code-reviewer | 实现后审查 |
 
 ### 第3部分：优化Prompt——完整版

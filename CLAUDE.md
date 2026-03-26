@@ -9,7 +9,7 @@
 | Skill | 描述 | 依赖Agent | 依赖Rule |
 |-------|------|----------|---------|
 | **plan** | 需求规划和实现计划 | planner | architecture, naming |
-| **springboot-tdd** | 测试驱动开发 | tdd-guide | architecture, naming, coding-conventions |
+| **test-driven-development** | 测试驱动开发 | tdd-guide | architecture, naming, coding-conventions |
 | **code-review** | 代码审查 | code-reviewer | architecture, naming, coding-conventions |
 | **build-fix** | 构建错误修复 | build-error-resolver | architecture, naming, coding-conventions |
 | **verify** | 综合验证系统 | - | all rules |
@@ -79,7 +79,7 @@
 |-------|------|----------|---------|
 | **planner** | 复杂功能和重构规划 | plan | architecture, naming |
 | **architect** | 系统设计和架构决策 | - | architecture, naming |
-| **tdd-guide** | 测试驱动开发 | springboot-tdd | architecture, naming, coding-conventions |
+| **tdd-guide** | 测试驱动开发 | test-driven-development | architecture, naming, coding-conventions |
 | **code-reviewer** | Java/Spring Boot代码审查 | springboot-patterns | architecture, naming, coding-conventions |
 | **build-error-resolver** | 构建错误修复 | springboot-patterns | architecture, naming, coding-conventions |
 | **refactor-cleaner** | 死代码清理 | - | - |
@@ -104,7 +104,7 @@
        │                   │
        │                   ▼
 开发阶段:                   │
-  /tdd ───────────> tdd-guide ──────────────> springboot-tdd ──> all rules
+  /tdd ───────────> tdd-guide ──────────────> test-driven-development ──> all rules
        │                   │
        │                   ▼
   /build-fix ─────> build-error-resolver ───> springboot-patterns ──> all rules
@@ -120,7 +120,7 @@
 |------|---------|----------|---------|------|
 | 技术设计文档 | tech-design | - | architecture + naming + coding-conventions | 架构图、API设计、数据库模型设计 |
 | 新功能设计 | plan | planner | architecture + naming | 确定包结构、类命名、接口设计 |
-| 编码实现 | springboot-tdd | tdd-guide | all rules | 完整的开发规范 |
+| 编码实现 | test-driven-development | tdd-guide | all rules | 完整的开发规范 |
 | 代码审查 | code-review | code-reviewer | all rules | 检查是否符合规范 |
 | Bug修复 | build-fix | build-error-resolver | coding-conventions | 主要关注数据持久化和异常处理规范 |
 
@@ -185,7 +185,7 @@ skills/
 ├── update-rules/            # 规则文件更新
 ├── tech-design/             # 技术设计文档生成
 ├── prompt-optimizer/        # Prompt 优化分析
-├── springboot-tdd/          # 测试驱动开发
+├── test-driven-development/ # 测试驱动开发
 ├── springboot-patterns/     # Spring Boot 架构模式
 ├── java-coding-standards/   # Java 编码标准
 ├── blueprint/               # 多会话工程项目规划

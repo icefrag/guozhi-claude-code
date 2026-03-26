@@ -31,7 +31,7 @@ rules:
 
 ## 详细指南
 
-执行TDD时，参考 `skill: springboot-tdd` 获取：
+执行TDD时，参考 `skill: test-driven-development` 获取：
 - 完整测试模式（单元、集成、E2E）
 - 测试文件组织
 - Mock外部服务模式
