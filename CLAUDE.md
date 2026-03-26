@@ -27,7 +27,7 @@
 
 | Skill | 描述 | 依赖Agent |
 |-------|------|----------|
-| **orchestrate** | 多代理工作流编排 | planner, tdd-guide, code-reviewer, security-reviewer |
+| **orchestrate** | 多代理工作流编排 | planner, tdd-guide, code-reviewer |
 | **devfleet** | DevFleet 并行多代理系统 | - |
 
 ### 文档与规则
@@ -43,10 +43,7 @@
 | Skill | 描述 |
 |-------|------|
 | **springboot-patterns** | Spring Boot架构模式、REST API设计 |
-| **springboot-security** | Spring Security最佳实践 |
-| **springboot-verification** | Spring Boot验证模式 |
 | **java-coding-standards** | Java编码标准 |
-| **jpa-patterns** | JPA持久化模式 |
 
 ### 通用/语言无关
 
@@ -85,7 +82,6 @@
 | **architect** | 系统设计和架构决策 | - | architecture, naming |
 | **tdd-guide** | 测试驱动开发 | springboot-tdd | architecture, naming, coding-conventions |
 | **code-reviewer** | Java/Spring Boot代码审查 | springboot-patterns | architecture, naming, coding-conventions |
-| **security-reviewer** | 安全漏洞检测与修复 | springboot-security | coding-conventions |
 | **build-error-resolver** | 构建错误修复 | springboot-patterns | architecture, naming, coding-conventions |
 | **refactor-cleaner** | 死代码清理 | - | - |
 | **doc-updater** | 文档和代码地图更新 | - | - |
@@ -96,7 +92,7 @@
 |---------|------|---------|
 | **architecture.md** | 分层架构、模块化设计、包结构、URI规范 | planner, architect, tdd-guide, code-reviewer, build-error-resolver, tech-design |
 | **naming.md** | Entity/Service/枚举/参数命名规范 | planner, architect, tdd-guide, code-reviewer, build-error-resolver, tech-design |
-| **coding-conventions.md** | Spring注入、数据持久化、工具类使用等开发规范 | tdd-guide, code-reviewer, security-reviewer, build-error-resolver, tech-design |
+| **coding-conventions.md** | Spring注入、数据持久化、工具类使用等开发规范 | tdd-guide, code-reviewer, build-error-resolver, tech-design |
 
 ## 工作流依赖图
 
@@ -117,9 +113,6 @@
        │                   ▼
 审查阶段:                   │
   /code-review ───> code-reviewer ──────────> springboot-patterns ──> all rules
-       │                   │
-       │                   ▼
-  /orchestrate ───> security-reviewer ──────> springboot-security ──> coding-conventions.md
 ```
 
 ## 规则使用场景
@@ -131,7 +124,6 @@
 | 编码实现 | springboot-tdd | tdd-guide | all rules | 完整的开发规范 |
 | 代码审查 | code-review | code-reviewer | all rules | 检查是否符合规范 |
 | Bug修复 | build-fix | build-error-resolver | coding-conventions | 主要关注数据持久化和异常处理规范 |
-| 安全审计 | springboot-security | security-reviewer | coding-conventions | 主要关注异常处理、JSON操作等规范 |
 
 ## Rule文件内容概览
 
@@ -187,12 +179,9 @@ skills/
 ├── plan/                    # 需求规划和实现计划
 ├── code-review/             # Java/Spring Boot 代码审查
 ├── build-fix/               # 构建错误修复
-├── verify/                  # 综合验证系统
-├── orchestrate/              # 多代理工作流编排
+├── orchestrate/             # 多代理工作流编排
 ├── refactor-clean/          # 死代码清理
 ├── test-coverage/           # 测试覆盖率分析
-├── save-session/            # 保存会话状态
-├── resume-session/          # 恢复会话
 ├── update-codemaps/         # 更新代码地图
 ├── update-docs/             # 更新文档
 ├── update-rules/            # 规则文件更新
@@ -200,22 +189,9 @@ skills/
 ├── prompt-optimizer/        # Prompt 优化分析
 ├── springboot-tdd/          # 测试驱动开发
 ├── springboot-patterns/     # Spring Boot 架构模式
-├── springboot-security/     # Spring Security 最佳实践
-├── springboot-verification/  # Spring Boot 验证模式
 ├── java-coding-standards/   # Java 编码标准
-├── jpa-patterns/            # JPA 持久化模式
-├── coding-standards/        # 通用编码标准
 ├── blueprint/               # 多会话工程项目规划
-├── verification-loop/       # 验证循环
-├── search-first/            # 搜索优先模式
-├── deep-research/           # 深度研究
-├── continuous-learning/     # 持续学习机制
-├── continuous-agent-loop/   # 持续代理循环
-├── autonomous-loops/        # 自主循环模式
-├── eval-harness/           # 评估框架
-├── strategic-compact/       # 战略精简
-├── plankton-code-quality/   # 代码质量检查
-└── iterative-retrieval/    # 迭代检索
+└── deep-research/           # 深度研究
 ```
 
 ### 调用方式
