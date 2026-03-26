@@ -8,30 +8,29 @@
 
 | Skill | 描述 | 阶段 |
 |-------|------|------|
-| **orchestrate** | 统一工作流入口点 | 入口 |
-| **brainstorming** | 需求澄清和规格文档 | 需求 |
-| **writing-plans** | 大需求详细计划 | 规划 |
-| **plan** | 小需求轻量计划 | 规划 |
-| **using-git-worktrees** | 隔离工作区 | 准备 |
-| **subagent-driven-development** | 子代理执行任务 | 执行 |
-| **test-driven-development** | TDD开发 | 执行 |
-| **dispatching-parallel-agents** | 并行任务调度 | 执行 |
-| **requesting-code-review** | 请求代码审查 | 审查 |
-| **receiving-code-review** | 处理CR反馈 | 审查 |
-| **finishing-a-development-branch** | 完成开发分支 | 收尾 |
+| **nbl.orchestrate** | 统一工作流入口点 | 入口 |
+| **nbl.brainstorming** | 需求澄清和规格文档 | 需求 |
+| **nbl.writing-plans** | 大需求详细计划 | 规划 |
+| **nbl.plan** | 小需求轻量计划 | 规划 |
+| **nbl.using-git-worktrees** | 隔离工作区 | 准备 |
+| **nbl.subagent-driven-development** | 子代理执行任务 | 执行 |
+| **nbl.test-driven-development** | TDD开发 | 执行 |
+| **nbl.dispatching-parallel-agents** | 并行任务调度 | 执行 |
+| **nbl.requesting-code-review** | 请求代码审查 | 审查 |
+| **nbl.receiving-code-review** | 处理CR反馈 | 审查 |
+| **nbl.finishing-a-development-branch** | 完成开发分支 | 收尾 |
 
 ### 独立工具 Skills
 
 | Skill | 描述 | 触发场景 |
 |-------|------|---------|
-| **refactor-clean** | 死代码清理 | 清理未使用代码 |
-| **test-coverage** | 测试覆盖率分析 | 分析测试缺口 |
-| **tech-design** | 技术设计文档 | 生成技术方案 |
-| **deep-research** | 深度研究 | 网络调研 |
-| **update-codemaps** | 更新CLAUDE.md | 项目结构变化 |
-| **update-rules** | 规则文件更新 | 修改编码规范 |
-| **writing-skills** | 编写新skill | 创建/修改skill |
-| **prompt-optimizer** | Prompt优化 | 优化用户prompt |
+| **nbl.refactor-clean** | 死代码清理 | 清理未使用代码 |
+| **nbl.test-coverage** | 测试覆盖率分析 | 分析测试缺口 |
+| **nbl.tech-design** | 技术设计文档 | 生成技术方案 |
+| **nbl.deep-research** | 深度研究 | 网络调研 |
+| **nbl.update-codemaps** | 更新CLAUDE.md | 项目结构变化 |
+| **nbl.update-rules** | 规则文件更新 | 修改编码规范 |
+| **nbl.writing-skills** | 编写新skill | 创建/修改skill |
 
 ## Rules
 
@@ -44,37 +43,36 @@
 ## 工作流
 
 ```
-/orchestrate feature "描述"  →  brainstorming → writing-plans/plan →
-                                   subagent-driven-development → code-review → finish
+/nbl.orchestrate feature "描述"  →  nbl.brainstorming → nbl.writing-plans/nbl.plan →
+                                          nbl.subagent-driven-development → code-review → finish
 
-/orchestrate bugfix "描述"   →  TDD修复 → code-review → commit
+/nbl.orchestrate bugfix "描述"   →  TDD修复 → code-review → commit
 
-/orchestrate refactor "描述" →  TDD基线 → refactor → code-review → finish
+/nbl.orchestrate refactor "描述" →  TDD基线 → refactor → code-review → finish
 ```
 
 ## Skills 目录结构
 
 ```
 skills/
-├── orchestrate/                 # 统一工作流入口
-├── brainstorming/              # 需求澄清
-├── writing-plans/              # 详细计划
-├── plan/                       # 轻量计划
-├── using-git-worktrees/        # 隔离工作区
-├── subagent-driven-development/# 子代理执行
-├── test-driven-development/    # TDD
-├── dispatching-parallel-agents/# 并行调度
-├── requesting-code-review/     # 请求CR
-├── receiving-code-review/      # 处理CR
-├── finishing-a-development-branch/ # 完成分支
-├── refactor-clean/             # 死代码清理
-├── test-coverage/              # 测试覆盖率
-├── tech-design/                # 技术设计
-├── deep-research/              # 深度研究
-├── update-codemaps/            # 更新代码地图
-├── update-rules/               # 规则更新
-├── writing-skills/             # 编写skill
-└── prompt-optimizer/           # Prompt优化
+├── nbl.orchestrate/                 # 统一工作流入口
+├── nbl.brainstorming/              # 需求澄清
+├── nbl.writing-plans/              # 详细计划
+├── nbl.plan/                       # 轻量计划
+├── nbl.using-git-worktrees/        # 隔离工作区
+├── nbl.subagent-driven-development/# 子代理执行
+├── nbl.test-driven-development/    # TDD
+├── nbl.dispatching-parallel-agents/# 并行调度
+├── nbl.requesting-code-review/     # 请求CR
+├── nbl.receiving-code-review/      # 处理CR
+├── nbl.finishing-a-development-branch/ # 完成分支
+├── nbl.refactor-clean/             # 死代码清理
+├── nbl.test-coverage/              # 测试覆盖率
+├── nbl.tech-design/                # 技术设计
+├── nbl.deep-research/              # 深度研究
+├── nbl.update-codemaps/            # 更新代码地图
+├── nbl.update-rules/               # 规则更新
+└── nbl.writing-skills/             # 编写skill
 ```
 
 ## 注意事项 (NON-NEGOTIABLE)
