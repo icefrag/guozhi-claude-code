@@ -1,0 +1,7 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Docs
+docs/
