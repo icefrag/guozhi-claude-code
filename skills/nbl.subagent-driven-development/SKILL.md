@@ -11,6 +11,19 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
+## ⛔ STOP: Read Before ANY Action
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  BEFORE reading plan, BEFORE creating tasks, BEFORE anything:   │
+│                                                                 │
+│  1. Are you on main/master branch? → MUST call worktree skill   │
+│  2. Already in a worktree? → Skip to "Read Plan" section        │
+│                                                                 │
+│  NEVER dispatch implementer on main/master without worktree     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 ## NON-NEGOTIABLE Requirements (Read BEFORE Starting)
 
 **You MUST complete these checks before dispatching ANY implementer subagent:**
@@ -423,6 +436,10 @@ Done!
 - But catches issues early (cheaper than debugging later)
 
 ## Red Flags
+
+**⛔ CRITICAL - STOP IMMEDIATELY if:**
+- You are on main/master branch and have NOT called `nbl.using-git-worktrees`
+- You dispatched an implementer WITHOUT worktree isolation
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
