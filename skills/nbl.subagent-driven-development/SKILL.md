@@ -171,8 +171,10 @@ digraph parallel_flow {
     "Create worktrees (max 5)" [shape=box];
     "Dispatch agents in parallel" [shape=box];
     "Wait for any completion" [shape=box];
-    "CR Review" [shape=diamond];
-    "Fix issues" [shape=box];
+    "Stage 1: Spec Review" [shape=diamond];
+    "Fix spec issues" [shape=box];
+    "Stage 2: Code Quality Review" [shape=diamond];
+    "Fix quality issues" [shape=box];
     "Rebase to main" [shape=box];
     "Merge to main" [shape=box];
     "Cleanup worktree" [shape=box];
@@ -181,10 +183,13 @@ digraph parallel_flow {
 
     "Create worktrees (max 5)" -> "Dispatch agents in parallel";
     "Dispatch agents in parallel" -> "Wait for any completion";
-    "Wait for any completion" -> "CR Review";
-    "CR Review" -> "Fix issues" [label="fail"];
-    "Fix issues" -> "CR Review";
-    "CR Review" -> "Rebase to main" [label="pass"];
+    "Wait for any completion" -> "Stage 1: Spec Review";
+    "Stage 1: Spec Review" -> "Fix spec issues" [label="issues found"];
+    "Fix spec issues" -> "Stage 1: Spec Review";
+    "Stage 1: Spec Review" -> "Stage 2: Code Quality Review" [label="passed"];
+    "Stage 2: Code Quality Review" -> "Fix quality issues" [label="issues found"];
+    "Fix quality issues" -> "Stage 2: Code Quality Review";
+    "Stage 2: Code Quality Review" -> "Rebase to main" [label="passed"];
     "Rebase to main" -> "Merge to main";
     "Merge to main" -> "Cleanup worktree";
     "Cleanup worktree" -> "More agents pending?";
@@ -197,21 +202,24 @@ digraph parallel_flow {
 
 For each completed agent:
 
-1. **CR Review** - Use spec-reviewer + code-quality-reviewer
-2. **Rebase** - `git rebase main` (handle conflicts if any)
-3. **Merge** - `git merge --ff-only` into main
-4. **Cleanup** - Remove worktree and branch
+1. **Stage 1: Spec Review** - Verify implementation matches spec
+2. **Stage 2: Code Quality Review** - Verify code quality
+3. **Fix Issues** - If either stage fails, implementer fixes and re-reviews
+4. **Rebase** - `git rebase main` (handle conflicts if any)
+5. **Merge** - `git merge --ff-only` into main
+6. **Cleanup** - Remove worktree and branch
 
 ### Error Handling
 
 | Scenario | Action |
 |----------|--------|
-| CR fails | Agent fixes, re-review |
+| Spec review fails | Implementer fixes spec gaps, re-review |
+| Code quality review fails | Implementer fixes quality issues, re-review |
 | Agent blocked | Main agent provides context or re-dispatches |
 | Rebase conflict | Main agent resolves |
 | Merge fails | Rollback, fix, retry |
 
-**Rule:** One agent failure does not block other parallel agents from executing, but blocks subsequent merges.
+**Rule:** One agent failure does not block other parallel agents from executing, but blocks that agent's subsequent merges until fixed.
 
 ## The Process (WITH NON-NEGOTIABLE GATES)
 
@@ -437,12 +445,10 @@ Done!
 
 ## Red Flags
 
-**⛔ CRITICAL - STOP IMMEDIATELY if:**
-- You are on main/master branch and have NOT called `nbl.using-git-worktrees`
-- You dispatched an implementer WITHOUT worktree isolation
-
 **Never:**
 - Start implementation on main/master branch without explicit user consent
+- You are on main/master branch and have NOT called `nbl.using-git-worktrees`
+- You dispatched an implementer WITHOUT worktree isolation
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
 - Make subagent read plan file (provide full text instead)
@@ -453,19 +459,12 @@ Done!
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
-
-**Parallel mode red flags:**
-- Never dispatch more than 5 agents simultaneously
-- Never skip CR before merge
-- Never merge without rebasing first
-- Never proceed to next level with failed agents
-- Never ignore rebase conflicts
-
-**Sequential mode (single worktree):**
-- Dispatch multiple implementation subagents in parallel (conflicts)
-
-**Parallel mode (multiple worktrees):**
-- Allowed: Dispatch up to 5 agents in parallel, each in isolated worktree
+- Dispatch more than 5 agents simultaneously
+- Skip CR before merge
+- Merge without rebasing first
+- Proceed to next level with failed agents
+- Ignore rebase conflicts
+- In sequential mode (single worktree): dispatch multiple implementation subagents in parallel (conflicts)
 
 **If subagent asks questions:**
 - Answer clearly and completely
