@@ -20,6 +20,20 @@
 
 ---
 
+## 安装
+
+在 Claude Code 中执行以下命令安装此插件：
+
+```bash
+# 添加插件市场
+/plugin marketplace add https://github.com/icefrag/java-claude-code
+
+# 安装插件
+/plugin install nbl@nbl-dev
+```
+
+---
+
 # 项目配置
 
 此文件定义项目的开发规范和依赖关系。
