@@ -26,34 +26,76 @@ Task tool (general-purpose):
 
     **Ask them now.** Raise any concerns before starting work.
 
+    ## ⛔ STOP: TDD Is NON-NEGOTIABLE
+
+    ```
+    ┌─────────────────────────────────────────────────────────────────┐
+    │  BEFORE writing ANY implementation code:                        │
+    │                                                                 │
+    │  1. Invoke Skill tool: nbl.test-driven-development              │
+    │  2. The skill guides you through RED → GREEN → REFACTOR         │
+    │  3. Do NOT write tests yourself - use the skill                 │
+    │                                                                 │
+    │  If you write implementation without the skill, DELETE it.      │
+    └─────────────────────────────────────────────────────────────────┘
+    ```
+
+    ## Common Excuses for Skipping TDD (ALL INVALID)
+
+    | Excuse | Reality |
+    |--------|---------|
+    | "It's too simple to need tests" | Simple code has bugs too. The skill takes 30 seconds. |
+    | "I already know what to do" | Knowing ≠ implementing correctly. Use the skill. |
+    | "Tests would be trivial" | Trivial tests catch trivial bugs. Use the skill. |
+    | "I'll add tests after" | Tests-after proves nothing. TDD is about design, not just coverage. |
+    | "The skill is overkill" | The skill is lightweight and saves debugging time. |
+    | "This is just a small change" | Small changes cause big bugs. Use the skill. |
+
     ## Your Job (NON-NEGOTIABLE)
 
     Once you're clear on requirements:
 
-    ### Step 1: Use TDD Skill (MANDATORY)
-    **You MUST invoke `nbl.test-driven-development` skill before writing any implementation code.**
+    ### Step 1: Invoke TDD Skill (MANDATORY)
 
-    Do NOT write tests yourself. Use the skill:
-    - The skill guides you through RED → GREEN → REFACTOR cycle
-    - The skill ensures you watch tests fail before they pass
-    - The skill enforces minimal implementation
+    ```
+    Use Skill tool with:
+      skill: "nbl.test-driven-development"
+    ```
+
+    The skill will:
+    - Guide you through RED (write failing test)
+    - Guide you through GREEN (minimal implementation)
+    - Guide you through REFACTOR (improve code)
+
+    **Do NOT write tests yourself.** The skill provides structure and ensures discipline.
 
     ### Step 2: Self-Review
     See "Before Reporting Back: Self-Review" section
 
     ### Step 3: Report Back
-    Use the report format below
+    Use the report format below - you MUST declare TDD usage
 
     **NEVER:**
-    - Write implementation before invoking TDD skill
+    - Write ANY implementation code before invoking TDD skill
     - Skip the TDD skill because "it's simple"
     - Add features not in the spec
     - Commit without running tests
+    - Report DONE without declaring TDD usage
 
     Work from: [directory]
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
+
+    ## Red Flags - STOP and Fix
+
+    If you catch yourself:
+    - Writing implementation before tests → DELETE code, invoke TDD skill
+    - Saying "I'll test after" → DELETE code, invoke TDD skill
+    - Skipping skill because "I know this" → DELETE code, invoke TDD skill
+    - Writing tests without the skill → DELETE tests, invoke TDD skill
+
+    **All of these mean: Delete your code. Start over with the TDD skill.**
 
     ## Code Organization
 
@@ -100,13 +142,14 @@ Task tool (general-purpose):
     - Is the code clean and maintainable?
 
     **Discipline:**
+    - Did I invoke nbl.test-driven-development skill FIRST?
     - Did I avoid overbuilding (YAGNI)?
     - Did I only build what was requested?
     - Did I follow existing patterns in the codebase?
 
     **Testing:**
+    - Did I use the TDD skill (not just write tests manually)?
     - Do tests actually verify behavior (not just mock behavior)?
-    - Did I follow TDD if required?
     - Are tests comprehensive?
 
     If you find issues during self-review, fix them now before reporting.
@@ -114,14 +157,29 @@ Task tool (general-purpose):
     ## Report Format
 
     When done, report:
-    - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - What you implemented (or what you attempted, if blocked)
-    - What you tested and test results
-    - Files changed
-    - Self-review findings (if any)
-    - Any issues or concerns
+
+    **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
+
+    **TDD Declaration:** (REQUIRED)
+    - [ ] I invoked nbl.test-driven-development skill BEFORE writing implementation
+    - [ ] I followed RED → GREEN → REFACTOR cycle
+    - [ ] All tests pass
+
+    **What you implemented:** (or what you attempted, if blocked)
+
+    **What you tested:** test results and coverage
+
+    **Files changed:**
+
+    **Self-review findings:** (if any)
+
+    **Issues or concerns:** (if any)
+
+    ---
 
     Use DONE_WITH_CONCERNS if you completed the work but have doubts about correctness.
     Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need
     information that wasn't provided. Never silently produce work you're unsure about.
+
+    **You cannot report DONE without checking the TDD Declaration boxes.**
 ```
