@@ -16,7 +16,7 @@
 |------|------|------|
 | Skills | 18+ | 覆盖完整开发生命周期的技能 |
 | Rules | 12 | 编码规范、架构规范、命名规范等 |
-| Agents | 1 | 代码审查代理 |
+| Agents | 2 | 独立代理（代码审查、规格审查） |
 
 ---
 
@@ -62,27 +62,61 @@
 | **naming.md** | Entity/Service/枚举/参数命名规范 |
 | **coding-conventions.md** | Spring注入、数据持久化、工具类使用等开发规范 |
 
+## Agents
+
+| Agent | 描述 | 调用方式 |
+|-------|------|---------|
+| **nbl:code-reviewer** | 代码审查，检查实现是否符合计划和规范 | Agent tool |
+| **nbl:spec-document-reviewer** | 规格文档审查，检查完整性和一致性 | Agent tool |
+
 ## 工作流
 
-```
-/nbl.orchestrate feature "描述"  →  nbl.brainstorming → nbl.writing-plans/nbl.plan →
-                                          nbl.subagent-driven-development → code-review → finish
+### Feature 开发完整流程
 
+```
+/nbl.orchestrate feature "描述"
+    ↓
+nbl.brainstorming
+    ├── 需求澄清
+    ├── 输出 Spec (docs/nbl/specs/)
+    ├── nbl:spec-document-reviewer 审查 Spec
+    └── 用户确认 Spec
+    ↓
+nbl.writing-plans / nbl.plan
+    ├── 输出 Plan (docs/nbl/plans/)
+    └── 用户确认 Plan
+    ↓
+nbl.subagent-driven-development
+    ├── GATE 1: nbl.using-git-worktrees (隔离工作区)
+    ├── GATE 2: nbl.test-driven-development (TDD)
+    ├── GATE 3: nbl:spec-reviewer (规格合规审查)
+    └── GATE 4: nbl:code-reviewer (代码质量审查)
+    ↓
+nbl.finishing-a-development-branch
+```
+
+### 快捷工作流
+
+```
 /nbl.orchestrate bugfix "描述"   →  TDD修复 → code-review → commit
 
 /nbl.orchestrate refactor "描述" →  TDD基线 → refactor → code-review → finish
 ```
 
-## Skills 目录结构
+## 目录结构
 
 ```
+agents/
+├── code-reviewer.md          # 代码审查 agent
+└── spec-document-reviewer.md # 规格文档审查 agent
+
 skills/
 ├── nbl.orchestrate/                 # 统一工作流入口
 ├── nbl.brainstorming/              # 需求澄清
 ├── nbl.writing-plans/              # 详细计划
 ├── nbl.plan/                       # 轻量计划
 ├── nbl.using-git-worktrees/        # 隔离工作区
-├── nbl.subagent-driven-development/# 子代理执行
+├── nbl.subagent-driven-development/# 子代理执行 (含 4 个 NON-NEGOTIABLE gates)
 ├── nbl.test-driven-development/    # TDD
 ├── nbl.dispatching-parallel-agents/# 并行调度
 ├── nbl.requesting-code-review/     # 请求CR
