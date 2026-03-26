@@ -20,7 +20,7 @@
 
 2. **需求澄清** (通过 `/nbl.orchestrate feature`)
    - 使用 **nbl.brainstorming** skill 澄清需求
-   - 大需求输出设计文档到 `docs/superpowers/specs/`
+   - 大需求输出设计文档到 `docs/nbl/specs/`
    - 小需求跳过此步骤
 
 3. **规划**

@@ -30,14 +30,14 @@ digraph orchestrate_feature_workflow {
     "1. User starts /orchestrate feature\n[Main Window - Orchestration]" [shape=doublecircle fillcolor=lightblue];
 
     "2. brainstorming skill\n[Main Window - Requirements Clarification]" [fillcolor=lightgreen];
-    "3. Output: docs/superpowers/specs/\n<date>-<topic>-design.md" [shape=note fillcolor=lightgray];
+    "3. Output: docs/nbl/specs/\n<date>-<topic>-design.md" [shape=note fillcolor=lightgray];
 
     "4. Assess requirement size" [shape=diamond];
     "4a. Large requirement\n(multi-subsystem/complex)" [fillcolor=lightyellow];
     "4b. Small requirement\n(simple/quick)" [fillcolor=lightyellow];
 
     "5a. writing-plans skill\n[Subagent - Generate detailed plan]" [fillcolor=lightpink];
-    "5a. Output: docs/superpowers/plans/\n<date>-<feature>.md" [shape=note fillcolor=lightgray];
+    "5a. Output: docs/nbl/plans/\n<date>-<feature>.md" [shape=note fillcolor=lightgray];
     "5a. plan review loop\n(plan-document-reviewer)" [fillcolor=lightpink];
 
     "5b. plan skill\n[Current project - Lightweight plan]" [fillcolor=lightpink];
@@ -59,14 +59,14 @@ digraph orchestrate_feature_workflow {
     "10. Return to main window" [shape=doublecircle fillcolor=lightblue];
 
     "1. User starts /orchestrate feature" -> "2. brainstorming skill";
-    "2. brainstorming skill" -> "3. Output: docs/superpowers/specs/<date>-<topic>-design.md";
-    "3. Output: docs/superpowers/specs/<date>-<topic>-design.md" -> "4. Assess requirement size";
+    "2. brainstorming skill" -> "3. Output: docs/nbl/specs/<date>-<topic>-design.md";
+    "3. Output: docs/nbl/specs/<date>-<topic>-design.md" -> "4. Assess requirement size";
     "4. Assess requirement size" -> "4a. Large requirement" [label="Large"];
     "4. Assess requirement size" -> "4b. Small requirement" [label="Small"];
     "4a. Large requirement" -> "5a. writing-plans skill";
     "4b. Small requirement" -> "5b. plan skill";
-    "5a. writing-plans skill" -> "5a. Output: docs/superpowers/plans/<date>-<feature>.md";
-    "5a. Output: docs/superpowers/plans/<date>-<feature>.md" -> "5a. plan review loop";
+    "5a. writing-plans skill" -> "5a. Output: docs/nbl/plans/<date>-<feature>.md";
+    "5a. Output: docs/nbl/plans/<date>-<feature>.md" -> "5a. plan review loop";
     "5a. plan review loop" -> "6. using-git-worktrees";
     "5b. plan skill" -> "6. using-git-worktrees";
     "6. using-git-worktrees" -> "7. Task execution mode";
