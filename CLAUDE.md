@@ -35,7 +35,6 @@
 | Skill | 描述 | 依赖Agent |
 |-------|------|----------|
 | **update-codemaps** | 更新代码地图 | doc-updater |
-| **update-docs** | 更新文档 | doc-updater |
 | **update-rules** | 规则文件更新 | code-reviewer |
 
 ### Java/Spring Boot
@@ -183,7 +182,6 @@ skills/
 ├── refactor-clean/          # 死代码清理
 ├── test-coverage/           # 测试覆盖率分析
 ├── update-codemaps/         # 更新代码地图
-├── update-docs/             # 更新文档
 ├── update-rules/            # 规则文件更新
 ├── tech-design/             # 技术设计文档生成
 ├── prompt-optimizer/        # Prompt 优化分析
