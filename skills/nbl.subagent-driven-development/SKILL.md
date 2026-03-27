@@ -37,6 +37,22 @@ digraph when_to_use {
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
 
+## NON-NEGOTIABLE GATES
+
+Before any task execution, these gates MUST pass:
+
+**GATE 1: Git Worktree Isolation**
+- MUST run in a git worktree (never main/master branch)
+- If not in worktree: invoke `nbl.using-git-worktrees` first
+- No exceptions
+
+**GATE 2: Test-Driven Development**
+- All implementation MUST follow TDD: write failing test → implement → verify pass
+- Subagents receive explicit TDD instructions in their prompt
+- No "implement first, test later" allowed
+
+**These gates are NON-NEGOTIABLE.** Skip them only if user explicitly overrides.
+
 ## The Process
 
 ```dot
@@ -59,11 +75,18 @@ digraph process {
     }
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
+    "GATE 1: In git worktree?" [shape=diamond style=filled fillcolor=yellow];
+    "Invoke nbl.using-git-worktrees" [shape=box];
+    "GATE 2: TDD mode enabled?" [shape=diamond style=filled fillcolor=yellow];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use nbl.finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "GATE 1: In git worktree?";
+    "GATE 1: In git worktree?" -> "Invoke nbl.using-git-worktrees" [label="no"];
+    "Invoke nbl.using-git-worktrees" -> "GATE 1: In git worktree?";
+    "GATE 1: In git worktree?" -> "GATE 2: TDD mode enabled?" [label="yes"];
+    "GATE 2: TDD mode enabled?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -233,6 +256,10 @@ Done!
 
 ## Red Flags
 
+**Never (NON-NEGOTIABLE):**
+- **Start implementation without git worktree** - MUST invoke nbl.using-git-worktrees first
+- **Skip TDD** - "implement first, test later" is forbidden
+
 **Never:**
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
@@ -264,14 +291,14 @@ Done!
 
 ## Integration
 
-**Required workflow skills:**
-- **nbl.using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
+**NON-NEGOTIABLE Requirements:**
+- **nbl.using-git-worktrees** - MUST invoke before first task. No exceptions.
+- **nbl.test-driven-development** - MUST follow TDD for all implementation. No exceptions.
+
+**Supporting skills:**
 - **nbl.writing-plans** - Creates the plan this skill executes
 - **nbl.requesting-code-review** - Code review template for reviewer subagents
 - **nbl.finishing-a-development-branch** - Complete development after all tasks
-
-**Subagents should use:**
-- **nbl.test-driven-development** - Subagents follow TDD for each task
 
 **Alternative workflow:**
 - **nbl.executing-plans** - Use for parallel session instead of same-session execution
