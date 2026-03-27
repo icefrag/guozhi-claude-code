@@ -270,8 +270,17 @@ If the conflict is too complex for automatic resolution:
 digraph process {
     rankdir=TB;
 
+    subgraph cluster_pre_execution {
+        label="Pre-Execution Gate (MANDATORY)";
+        style=filled fillcolor=lightcoral];
+        "⛔ GATE 1: Run git worktree list" [shape=box style=filled fillcolor=yellow];
+        "Current dir in worktree?" [shape=diamond style=filled fillcolor=yellow];
+        "Invoke nbl.using-git-worktrees" [shape=box style=filled fillcolor=lightpink];
+        "cd to worktree directory" [shape=box];
+    }
+
     subgraph cluster_setup {
-        label="Setup Phase (NON-NEGOTIABLE)";
+        label="Setup Phase";
         style=filled fillcolor=lightyellow;
         "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
         "Analyze dependencies → Build levels" [shape=box];
@@ -280,10 +289,16 @@ digraph process {
     subgraph cluster_level_loop {
         label="For Each Level (Sequential)";
         style=filled fillcolor=lightyellow;
-        "Call nbl.using-git-worktrees for this level" [shape=box style=filled fillcolor=lightpink];
-        "Create worktrees for tasks in this level (max 5)" [shape=box];
+        "Create worktrees for tasks in this level (max 5)" [shape=box style=filled fillcolor=lightpink];
         "Dispatch N agents in parallel" [shape=box style=filled fillcolor=lightblue];
     }
+
+    // Pre-execution flow
+    "⛔ GATE 1: Run git worktree list" -> "Current dir in worktree?";
+    "Current dir in worktree?" -> "cd to worktree directory" [label="yes"];
+    "Current dir in worktree?" -> "Invoke nbl.using-git-worktrees" [label="no"];
+    "Invoke nbl.using-git-worktrees" -> "⛔ GATE 1: Run git worktree list" [label="verify"];
+    "cd to worktree directory" -> "Read plan, extract all tasks with full text, note context, create TodoWrite";
 
     subgraph cluster_pipeline {
         label="Pipeline Processing";
@@ -313,8 +328,7 @@ digraph process {
 
     // Setup flow
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Analyze dependencies → Build levels";
-    "Analyze dependencies → Build levels" -> "Call nbl.using-git-worktrees for this level";
-    "Call nbl.using-git-worktrees for this level" -> "Create worktrees for tasks in this level (max 5)";
+    "Analyze dependencies → Build levels" -> "Create worktrees for tasks in this level (max 5)";
     "Create worktrees for tasks in this level (max 5)" -> "Dispatch N agents in parallel";
 
     // Pipeline processing
@@ -334,7 +348,7 @@ digraph process {
     // Cleanup flow
     "Level complete" -> "Mark level tasks complete";
     "Mark level tasks complete" -> "More levels?";
-    "More levels?" -> "Call nbl.using-git-worktrees for this level" [label="yes - next level"];
+    "More levels?" -> "Create worktrees for tasks in this level (max 5)" [label="yes - next level"];
     "More levels?" -> "Dispatch final code reviewer" [label="no"];
     "Dispatch final code reviewer" -> "Use nbl.finishing-a-development-branch";
 }
@@ -351,7 +365,7 @@ digraph process {
 
 | Gate | Location | Requirement |
 |------|----------|-------------|
-| **GATE 1: Worktree** | Before each level | MUST call `nbl.using-git-worktrees` for tasks in current level |
+| **GATE 1: Worktree** | BEFORE reading plan | MUST verify current dir is in worktree (run `git worktree list`) |
 | **GATE 2: TDD** | Implementer phase | MUST invoke `nbl.test-driven-development` skill |
 | **GATE 3: Spec Review** | After implementer | MUST invoke `nbl.requesting-code-review` with spec-reviewer template |
 | **GATE 4: Quality Review** | After spec review | MUST invoke `nbl.requesting-code-review` with code-quality template |
