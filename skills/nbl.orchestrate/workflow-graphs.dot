@@ -12,11 +12,11 @@ digraph orchestrate_workflows {
         color=lightgray;
 
         brainstorming [fillcolor=lightgreen label="brainstorming\n(Main Window)"];
-        assess_size [shape=diamond fillcolor=lightyellow label="Size?"];
-        writing_plans [fillcolor=lightpink label="writing-plans\n(Large)"];
-        plan_skill [fillcolor=lightpink label="plan skill\n(Small)"];
-        worktree [fillcolor=lightpink label="using-git-worktrees"];
-        execute [fillcolor=lightpink label="subagent-driven-development"];
+        writing_plans [fillcolor=lightpink label="writing-plans"];
+        choose_mode [shape=diamond fillcolor=lightyellow label="Execution Mode?"];
+        parallel_exec [fillcolor=lightpink label="parallel-subagent-\ndriven-development"];
+        sequential_exec [fillcolor=lightpink label="subagent-driven-\ndevelopment"];
+        parallel_session [fillcolor=lightpink label="executing-plans\n(no subagent support)"];
         code_review [fillcolor=lightpink label="requesting-code-review"];
         finish [fillcolor=lightpink label="finishing-a-development-branch"];
     }
@@ -38,6 +38,7 @@ digraph orchestrate_workflows {
         color=lightgray;
 
         scope [fillcolor=lightgreen label="Define scope"];
+        worktree_r [fillcolor=lightpink label="using-git-worktrees"];
         baseline [fillcolor=lightpink label="TDD baseline"];
         refactor [fillcolor=lightpink label="Refactor"];
         finish_r [fillcolor=lightpink label="finishing-a-development-branch"];
@@ -45,13 +46,14 @@ digraph orchestrate_workflows {
 
     // Feature flow
     orchestrate -> brainstorming;
-    brainstorming -> assess_size;
-    assess_size -> writing_plans [label="Large"];
-    assess_size -> plan_skill [label="Small"];
-    writing_plans -> worktree;
-    plan_skill -> worktree;
-    worktree -> execute;
-    execute -> code_review;
+    brainstorming -> writing_plans;
+    writing_plans -> choose_mode;
+    choose_mode -> parallel_exec [label="parallelizable\ntasks"];
+    choose_mode -> sequential_exec [label="tightly\ncoupled"];
+    choose_mode -> parallel_session [label="no subagent\nsupport"];
+    parallel_exec -> code_review;
+    sequential_exec -> code_review;
+    parallel_session -> code_review;
     code_review -> finish;
 
     // Bugfix flow
@@ -62,8 +64,8 @@ digraph orchestrate_workflows {
 
     // Refactor flow
     orchestrate -> scope [label="refactor"];
-    scope -> worktree;
-    worktree -> baseline;
+    scope -> worktree_r;
+    worktree_r -> baseline;
     baseline -> refactor;
     refactor -> finish_r;
 

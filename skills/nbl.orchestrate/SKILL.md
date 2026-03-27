@@ -23,7 +23,7 @@ Unified workflow orchestration entry point. All implementation happens in subage
 ## Complete Feature Workflow
 
 ```dot
-digraph orchestrate_feature_workflow_v2 {
+digraph orchestrate_feature_workflow {
     rankdir=TB;
     node [shape=box style=filled fillcolor=lightyellow];
 
@@ -32,53 +32,75 @@ digraph orchestrate_feature_workflow_v2 {
     "2. brainstorming skill\n[Main Window]" [fillcolor=lightgreen];
     "3. Output: docs/nbl/specs/\n<date>-<topic>-design.md" [shape=note fillcolor=lightgray];
 
-    "4. writing-plans skill\n(with task dependencies)" [fillcolor=lightgreen];
+    "4. writing-plans skill\n[Main Window]" [fillcolor=lightgreen];
     "5. Output: docs/nbl/plans/\n<date>-<feature>.md" [shape=note fillcolor=lightgray];
 
-    "6. Build dependency graph" [fillcolor=lightgreen];
-    "7. Identify parallel levels" [shape=diamond fillcolor=lightyellow];
+    "6. Choose execution mode" [shape=diamond fillcolor=lightyellow];
 
-    "8a. Sequential level\n(single task)" [fillcolor=lightyellow];
-    "8b. Parallel level\n(multiple tasks, max 5)" [fillcolor=lightyellow];
+    "7a. subagent-driven-development\n(Same session, sequential)" [fillcolor=lightpink];
+    "7b. parallel-subagent-driven-development\n(Same session, parallel tasks)" [fillcolor=lightpink];
+    "7c. executing-plans\n(Parallel session, no subagent support)" [fillcolor=lightpink];
 
-    "9a. Single worktree\n(using-git-worktrees)" [fillcolor=lightpink];
-    "9b. Batch worktrees\n(using-git-worktrees)" [fillcolor=lightpink];
-
-    "10a. Sequential execution\n(subagent-driven-development)" [fillcolor=lightpink];
-    "10b. Parallel execution:\n- Dispatch agents (max 5)\n- Wait & process completions\n- CR → Rebase → Merge\n- Cleanup worktree" [fillcolor=lightpink];
-
-    "11. More levels?" [shape=diamond fillcolor=lightyellow];
-    "12. requesting-code-review" [fillcolor=lightpink];
-    "13. finishing-a-development-branch" [fillcolor=lightpink];
-    "14. Return to main window" [shape=doublecircle fillcolor=lightblue];
+    "8. All tasks complete?" [shape=diamond fillcolor=lightyellow];
+    "9. requesting-code-review" [fillcolor=lightpink];
+    "10. finishing-a-development-branch" [fillcolor=lightpink];
+    "11. Return to main window" [shape=doublecircle fillcolor=lightblue];
 
     "1. User starts /orchestrate feature" -> "2. brainstorming skill\n[Main Window]";
     "2. brainstorming skill\n[Main Window]" -> "3. Output: docs/nbl/specs/\n<date>-<topic>-design.md";
-    "3. Output: docs/nbl/specs/\n<date>-<topic>-design.md" -> "4. writing-plans skill\n(with task dependencies)";
+    "3. Output: docs/nbl/specs/\n<date>-<topic>-design.md" -> "4. writing-plans skill\n[Main Window]";
 
-    "4. writing-plans skill\n(with task dependencies)" -> "5. Output: docs/nbl/plans/\n<date>-<feature>.md";
-    "5. Output: docs/nbl/plans/\n<date>-<feature>.md" -> "6. Build dependency graph";
+    "4. writing-plans skill\n[Main Window]" -> "5. Output: docs/nbl/plans/\n<date>-<feature>.md";
+    "5. Output: docs/nbl/plans/\n<date>-<feature>.md" -> "6. Choose execution mode";
 
-    "6. Build dependency graph" -> "7. Identify parallel levels";
-    "7. Identify parallel levels" -> "8a. Sequential level\n(single task)" [label="single task"];
-    "7. Identify parallel levels" -> "8b. Parallel level\n(multiple tasks, max 5)" [label="multiple tasks"];
+    "6. Choose execution mode" -> "7a. subagent-driven-development\n(Same session, sequential)" [label="tasks sequential"];
+    "6. Choose execution mode" -> "7b. parallel-subagent-driven-development\n(Same session, parallel tasks)" [label="tasks parallelizable"];
+    "6. Choose execution mode" -> "7c. executing-plans\n(Parallel session, no subagent support)" [label="no subagent support"];
 
-    "8a. Sequential level\n(single task)" -> "9a. Single worktree\n(using-git-worktrees)";
-    "9a. Single worktree\n(using-git-worktrees)" -> "10a. Sequential execution\n(subagent-driven-development)";
+    "7a. subagent-driven-development\n(Same session, sequential)" -> "8. All tasks complete?";
+    "7b. parallel-subagent-driven-development\n(Same session, parallel tasks)" -> "8. All tasks complete?";
+    "7c. executing-plans\n(Parallel session, no subagent support)" -> "8. All tasks complete?";
 
-    "8b. Parallel level\n(multiple tasks, max 5)" -> "9b. Batch worktrees\n(using-git-worktrees)";
-    "9b. Batch worktrees\n(using-git-worktrees)" -> "10b. Parallel execution:\n- Dispatch agents (max 5)\n- Wait & process completions\n- CR → Rebase → Merge\n- Cleanup worktree";
+    "8. All tasks complete?" -> "6. Choose execution mode" [label="no - issues"];
+    "8. All tasks complete?" -> "9. requesting-code-review" [label="yes"];
 
-    "10a. Sequential execution\n(subagent-driven-development)" -> "11. More levels?";
-    "10b. Parallel execution:\n- Dispatch agents (max 5)\n- Wait & process completions\n- CR → Rebase → Merge\n- Cleanup worktree" -> "11. More levels?";
-
-    "11. More levels?" -> "7. Identify parallel levels" [label="yes"];
-    "11. More levels?" -> "12. requesting-code-review" [label="no"];
-
-    "12. requesting-code-review" -> "13. finishing-a-development-branch";
-    "13. finishing-a-development-branch" -> "14. Return to main window";
+    "9. requesting-code-review" -> "10. finishing-a-development-branch";
+    "10. finishing-a-development-branch" -> "11. Return to main window";
 }
 ```
+
+## Execution Mode Selection
+
+```dot
+digraph execution_mode_selection {
+    rankdir=TB;
+
+    "Have implementation plan?" [shape=diamond];
+    "Tasks mostly independent?" [shape=diamond];
+    "Subagent support available?" [shape=diamond];
+    "parallel-subagent-driven-development" [shape=box style=filled fillcolor=lightpink];
+    "subagent-driven-development" [shape=box style=filled fillcolor=lightpink];
+    "executing-plans" [shape=box style=filled fillcolor=lightpink];
+    "Brainstorm first" [shape=box];
+
+    "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
+    "Have implementation plan?" -> "Brainstorm first" [label="no"];
+
+    "Tasks mostly independent?" -> "Subagent support available?" [label="yes"];
+    "Tasks mostly independent?" -> "Brainstorm first" [label="no - tightly coupled"];
+
+    "Subagent support available?" -> "parallel-subagent-driven-development" [label="yes"];
+    "Subagent support available?" -> "executing-plans" [label="no"];
+}
+```
+
+### Mode Comparison
+
+| Mode | Session | Execution | Best For |
+|------|---------|-----------|----------|
+| **parallel-subagent-driven-development** | Same | Parallel (max 5) | Independent tasks, fast iteration |
+| **subagent-driven-development** | Same | Sequential | Tightly coupled tasks |
+| **executing-plans** | Parallel | Sequential | No subagent support |
 
 ## Bugfix Workflow
 
@@ -97,13 +119,13 @@ digraph orchestrate_bugfix_workflow {
     "4. requesting-code-review\n[Subagent - Code Review]" [fillcolor=lightpink];
     "4b. receiving-code-review\n[Handle CR feedback]" [fillcolor=lightpink];
 
-    "5. Commit fix\n[Main Window]" [fillcolor=lightblue];
+    "5. finishing-a-development-branch\n[Complete branch]" [fillcolor=lightpink];
 
     "1. User starts /orchestrate bugfix" -> "2. Quick bug reproduction";
     "2. Quick bug reproduction" -> "3. Fix using TDD";
     "3. Fix using TDD" -> "4. requesting-code-review";
     "4. requesting-code-review" -> "4b. receiving-code-review";
-    "4b. receiving-code-review" -> "5. Commit fix" [label="CR Passed"];
+    "4b. receiving-code-review" -> "5. finishing-a-development-branch" [label="CR Passed"];
     "4b. receiving-code-review" -> "3. Fix using TDD" [label="CR Issues → Fix"];
 }
 ```
@@ -145,25 +167,26 @@ digraph orchestrate_refactor_workflow {
 |-------|-----------|---------|
 | **orchestrate** | Main window | Unified entry point |
 | **brainstorming** | Main window | Requirements clarification |
-| **writing-plans** | Subagent | Detailed plan with task dependencies |
-| **plan** | Subagent | Lightweight plan for small requirements |
+| **writing-plans** | Main window | Detailed plan with task dependencies |
 | **using-git-worktrees** | Subagent | Isolated workspace (single or batch mode) |
-| **subagent-driven-development** | Subagent | Task execution (sequential or parallel, max 5) |
+| **subagent-driven-development** | Subagent | Sequential task execution in same session |
+| **parallel-subagent-driven-development** | Subagent | Parallel task execution (max 5) in same session |
+| **executing-plans** | Parallel session | Sequential execution without subagent support |
 | **test-driven-development** | Subagent | TDD cycle |
-| **dispatching-parallel-agents** | Subagent | Parallel task execution (deprecated, use subagent-driven-development) |
 | **requesting-code-review** | Subagent | Code review |
 | **receiving-code-review** | Subagent | Handle CR feedback |
 | **finishing-a-development-branch** | Subagent | Complete branch |
 
 ## When to Use
 
-| Scenario | Workflow | Plan Type |
-|----------|----------|-----------|
-| New feature (complex) | feature | writing-plans → file output |
-| New feature (simple) | feature | plan → in-memory |
+| Scenario | Workflow | Execution Mode |
+|----------|----------|----------------|
+| New feature (complex) | feature | writing-plans → parallel-subagent-driven-development |
+| New feature (simple) | feature | writing-plans → subagent-driven-development |
 | Bug fix | bugfix | TDD → subagent |
 | Safe refactoring | refactor | TDD baseline → subagent |
 | Multi-subsystem project | feature (decomposed) | Separate plan per subsystem |
+| No subagent support | any | executing-plans |
 
 ## Decision Logic
 
@@ -171,27 +194,20 @@ digraph orchestrate_refactor_workflow {
 Is this a creative/implementation task?
   └── YES → Use brainstorming first (main window)
        └── After brainstorming:
-            ├── Large requirement? → writing-plans (with task dependencies)
-            └── Small requirement? → plan (in-memory)
+            └── writing-plans (with task dependencies)
        └── After plan:
             ├── Build dependency graph from task dependencies
-            ├── Identify parallel levels
-            └── For each level:
-                 ├── Single task? → Sequential execution (single worktree)
-                 └── Multiple tasks? → Parallel execution (max 5 worktrees)
+            ├── Analyze task independence
+            └── Choose execution mode:
+                 ├── Independent tasks + subagent support?
+                 │   └── parallel-subagent-driven-development (max 5 parallel)
+                 ├── Tightly coupled + subagent support?
+                 │   └── subagent-driven-development (sequential)
+                 └── No subagent support?
+                     └── executing-plans (parallel session)
   └── NO (simple/known) → Skip brainstorming
        └── Direct to appropriate workflow
-
-Parallel execution (max 5 agents):
-  ├── Create batch worktrees
-  ├── Dispatch agents simultaneously
-  ├── Process completions: CR → Rebase → Merge → Cleanup
-  └── Handle conflicts at rebase time
 ```
-
-## Subagent Templates
-
-See `subagent-templates.md` for subagent dispatch templates.
 
 ## Red Flags
 
@@ -201,8 +217,10 @@ See `subagent-templates.md` for subagent dispatch templates.
 - Skip TDD for bug fixes
 - Skip code review
 - Skip CR feedback handling
+- Start implementation on main/master branch without worktree isolation
 
 **Always:**
 - Use orchestrate as single entry point
 - Dispatch subagents for all implementation
 - Handle CR feedback before proceeding
+- Use worktree isolation before implementation
