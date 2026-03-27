@@ -202,7 +202,18 @@ For each completed agent:
 4. **Rebase** - `git rebase $base_branch` (handle conflicts if any)
    - `$base_branch` is the branch we created worktrees from (e.g., main, dev, master)
 5. **Merge** - `git merge --ff-only $base_branch` into $base_branch
-6. **Keep worktree** - Cleanup will happen after all tasks complete in `finishing-a-development-branch`
+6. **Cleanup worktree** - Remove the task worktree immediately (non-blocking)
+   ```bash
+   # Cleanup worktree - failure does not block the pipeline
+   if [ -d "$worktree_path" ]; then
+       if git worktree remove "$worktree_path" 2>/dev/null; then
+           echo "✅ Worktree cleaned: $worktree_path"
+       else
+           echo "⚠️ Warning: Failed to remove worktree $worktree_path - skipping, manual cleanup may be needed"
+       fi
+   fi
+   ```
+7. **Keep branch** - Branch deletion is handled by `finishing-a-development-branch` after all tasks complete
 
 ### Error Handling
 
