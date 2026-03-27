@@ -24,18 +24,28 @@
 
 此文件定义项目的开发规范和依赖关系。
 
+## 统一入口
+
+所有开发工作通过 `/orchestrate` 入口：
+
+```
+/orchestrate feature "<描述>"   # 新功能开发
+/orchestrate bugfix "<描述>"    # Bug修复
+```
+
 ## Skills
 
 ### 开发工作流
 
 | Skill | 描述 | 阶段 |
 |-------|------|------|
-| **nbl.brainstorming** | 需求澄清和规格文档（入口点） | 需求 |
+| **nbl.orchestrate** | 统一入口，编排工作流 | 入口 |
+| **nbl.brainstorming** | 需求澄清和规格文档 | 需求 |
 | **nbl.writing-plans** | 详细计划 | 规划 |
 | **nbl.using-git-worktrees** | 隔离工作区 | 准备 |
-| **nbl.subagent-driven-development** | 子代理执行任务 | 执行 |
-| **nbl.test-driven-development** | TDD开发 | 执行 |
-| **nbl.dispatching-parallel-agents** | 并行任务调度 | 执行 |
+| **nbl.executing-plans** | 主 agent 直接执行 | 执行 |
+| **nbl.subagent-driven-development** | 子代理串行执行任务 | 执行 |
+| **nbl.parallel-subagent-driven-development** | 子代理并行执行任务 | 执行 |
 | **nbl.requesting-code-review** | 请求代码审查 | 审查 |
 | **nbl.receiving-code-review** | 处理CR反馈 | 审查 |
 | **nbl.finishing-a-development-branch** | 完成开发分支 | 收尾 |
@@ -62,30 +72,44 @@
 
 ## 工作流
 
+所有任务都遵循统一流程：
+
 ```
-nbl.brainstorming → nbl.writing-plans → nbl.subagent-driven-development → code-review → finish
+/orchestrate feature/bugfix
+    ↓
+brainstorming → design.md
+    ↓
+writing-plans → plan.md
+    ↓
+[执行模式选择]
+    ├── parallel-subagent-driven-development (多任务并行)
+    ├── subagent-driven-development (任务串行)
+    └── executing-plans (简单任务/无子代理支持)
+    ↓
+code-review → finish
 ```
 
 ## Skills 目录结构
 
 ```
 skills/
-├── nbl.brainstorming/              # 需求澄清（入口点）
-├── nbl.writing-plans/              # 详细计划
-├── nbl.using-git-worktrees/        # 隔离工作区
-├── nbl.subagent-driven-development/# 子代理执行
-├── nbl.test-driven-development/    # TDD
-├── nbl.dispatching-parallel-agents/# 并行调度
-├── nbl.requesting-code-review/     # 请求CR
-├── nbl.receiving-code-review/      # 处理CR
+├── nbl.orchestrate/                 # 统一入口
+├── nbl.brainstorming/               # 需求澄清
+├── nbl.writing-plans/               # 详细计划
+├── nbl.using-git-worktrees/         # 隔离工作区
+├── nbl.executing-plans/             # 主 agent 执行
+├── nbl.subagent-driven-development/ # 子代理串行执行
+├── nbl.parallel-subagent-driven-development/ # 子代理并行执行
+├── nbl.requesting-code-review/      # 请求CR
+├── nbl.receiving-code-review/       # 处理CR
 ├── nbl.finishing-a-development-branch/ # 完成分支
-├── nbl.refactor-clean/             # 死代码清理
-├── nbl.test-coverage/              # 测试覆盖率
-├── nbl.tech-design/                # 技术设计
-├── nbl.deep-research/              # 深度研究
-├── nbl.update-codemaps/            # 更新代码地图
-├── nbl.update-rules/               # 规则更新
-└── nbl.writing-skills/             # 编写skill
+├── nbl.refactor-clean/              # 死代码清理
+├── nbl.test-coverage/               # 测试覆盖率
+├── nbl.tech-design/                 # 技术设计
+├── nbl.deep-research/               # 深度研究
+├── nbl.update-codemaps/             # 更新代码地图
+├── nbl.update-rules/                # 规则更新
+└── nbl.writing-skills/              # 编写skill
 ```
 
 ## 注意事项 (NON-NEGOTIABLE)
