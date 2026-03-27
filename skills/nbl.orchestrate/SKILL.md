@@ -145,21 +145,17 @@ digraph orchestrate_bugfix_workflow {
 ## Decision Logic
 
 ```
-Is this a creative/implementation task?
-  └── YES → Use brainstorming first (main window)
-       └── After brainstorming:
-            └── writing-plans (with task dependencies)
-       └── After plan:
-            └── Choose execution mode (see Complete Feature Workflow diagram)
-  └── NO (simple/known) → Skip brainstorming
-       └── Direct to appropriate workflow
+All tasks follow the same flow:
+  1. brainstorming (main window) → design.md
+  2. writing-plans (main window) → plan.md
+  3. Choose execution mode (see Complete Feature Workflow diagram)
 ```
 
 ## Red Flags
 
 **Never:**
 - Implement in main window (all work in subagents)
-- Skip brainstorming for creative tasks
+- Skip brainstorming
 - Skip code review
 - Skip CR feedback handling
 - Start implementation on main/master branch without worktree isolation
