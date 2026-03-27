@@ -100,17 +100,6 @@ digraph when_to_use {
 }
 ```
 
-**vs. Subagent-Driven Development (serial):**
-- Same session (no context switch)
-- Parallel dispatch for independent tasks
-- Level-based execution (dependencies respected)
-- Two-stage review after each task
-
-**vs. Executing Plans (main agent):**
-- Subagents execute (isolated context)
-- Fresh subagent per task (no context pollution)
-- Parallel execution for independent tasks
-
 ## Level-Based Execution
 
 ### Dependency Graph Analysis
