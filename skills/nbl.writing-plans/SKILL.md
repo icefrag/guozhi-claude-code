@@ -74,19 +74,6 @@ Each task MUST include dependency information for parallel execution planning:
 - `Yes` - Task can run in parallel with other independent tasks
 - `No (reason)` - Task must wait for dependencies, explain why
 
-### Task Granularity Rules (NON-NEGOTIABLE)
-
-**Rule:** One task = one independently testable feature unit
-
-| Type | Example | Allowed |
-|------|---------|---------|
-| ✅ Feature module | "User authentication module" | Yes |
-| ✅ Independent subsystem | "Logging service" | Yes |
-| ❌ By code layer | "Auth API" + "Auth Service" + "Auth Mapper" | No |
-| ❌ Too granular | "Add field X" + "Add field Y" | No |
-
-**Why:** Tasks split by code layer create artificial dependencies and merge conflicts. Split by feature boundaries instead.
-
 ## Task Structure
 
 ````markdown
