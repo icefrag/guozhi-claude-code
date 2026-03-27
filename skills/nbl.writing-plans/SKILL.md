@@ -145,61 +145,77 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Mode Analysis
 
-After writing and self-reviewing the plan, analyze task dependencies to determine the execution mode.
+After writing and self-reviewing the plan, first assess task complexity to determine if inline mode is appropriate. If not, analyze task dependencies to determine the execution mode.
 
-### Analysis Rules
+### Inline Mode Selection
 
-| Condition | Execution Mode |
-|-----------|---------------|
-| Single task with `Dependencies: None` | `inline` |
-| All tasks form a chain (each depends on previous) | `serial` |
-| Multiple tasks with `Dependencies: None`, or tasks at same level can run together | `parallel` |
+**Use inline mode (main agent executes directly) when the task is low complexity.** Subagents are only needed for complex work that pollutes context.
+
+**Typical low complexity tasks suitable for inline:**
+- Fixing typos/spelling mistakes
+- Modifying configuration values
+- Adjusting UI text/styles/CSS
+- Removing dead code/unused imports
+- Single-point bug fixes (one function/location)
+- Any small change that touches 1-2 files, <100 lines total
+
+**Guidelines for inline:**
+- If the change is small, clear, and doesn't require exploration → use `inline`
+- If the change is large, requires exploration, or needs user clarification → don't use `inline`
+- Even with multiple tasks, if all are small and clearly defined → you can still use `inline`
+- Trust your judgment: if it doesn't need a subagent → use inline
 
 ### Decision Logic
 
 ```python
 # Pseudocode
 def determine_execution_mode(plan):
-    if len(plan.tasks) == 1:
-        return "inline"  # Single task, main agent can handle directly
+    # Step 1: Check for low complexity, if yes use inline
+    if is_low_complexity_clearly_suitable_for_inline(plan):
+        return "inline"  # Low complexity, main agent handles directly
 
-    # Analyze dependency levels
+    # Step 2: Not low complexity, analyze dependency levels
     levels = analyze_dependency_levels(plan.tasks)
 
     if all(level has 1 task for level in levels):
-        return "serial"  # Pure chain dependency
+        return "serial"  # Pure chain dependency, sequential subagent execution
     else:
-        return "parallel"  # Has parallelizable tasks
+        return "parallel"  # Has parallelizable tasks, parallel subagent execution
 ```
 
 ### Examples
 
-**Inline (single task):**
+**Inline (low complexity):**
 ```
-Task 1: Add config field
-  Dependencies: None
+Task 1: Fix typo in error message
+  Small change, clear what to do
 ```
-
-**Serial (chain):**
 ```
-Task 1: Define entity
-  Dependencies: None
-Task 2: Create mapper
-  Dependencies: Task 1
-Task 3: Implement service
-  Dependencies: Task 2
+Task 1: Remove unused import in UserController
+Task 2: Delete unused UserService.getOldMethod()
+  Both small, no exploration needed
 ```
 
-**Parallel (multiple independent):**
+**Serial (chain dependency, complex):**
 ```
-Task 1: User module
-  Dependencies: None
-Task 2: Order module
-  Dependencies: None
-Task 3: Payment module
-  Dependencies: None
-Task 4: Integration
-  Dependencies: Task 1, Task 2, Task 3
+Task 1: Define User entity model
+  Large task, needs entity + validation + mapper
+Task 2: Create UserRepository with JPA queries
+  Depends on Task 1
+Task 3: Implement UserService with business logic
+  Depends on Task 2
+```
+
+**Parallel (multiple independent tasks, complex):**
+```
+Task 1: Implement User authentication module
+  Complex, multiple files
+Task 2: Implement Order management module
+  Complex, multiple files
+Task 3: Implement Payment processing module
+  Complex, multiple files
+Task 4: Integration and end-to-end testing
+  Depends on Tasks 1, 2, 3
 ```
 
 ### Output Format
@@ -213,21 +229,21 @@ Add to plan document footer:
 
 ## Execution Handoff
 
-After saving and self-reviewing the plan, analyze task dependencies to determine execution mode and automatically invoke the corresponding skill.
+After saving and self-reviewing the plan, assess complexity then analyze task dependencies to determine execution mode and automatically invoke the corresponding skill.
 
 ### Mode Decision
 
 | Mode | Condition | Skill |
 |------|-----------|-------|
-| `inline` | Single task | `nbl.executing-plans` |
-| `serial` | Tasks form a chain (each depends on previous) | `nbl.subagent-driven-development` |
-| `parallel` | Multiple independent tasks exist | `nbl.parallel-subagent-driven-development` |
+| `inline` | Low complexity (small change, clear scope, no exploration needed) | `nbl.executing-plans` |
+| `serial` | Tasks form a chain (each depends on previous), complex work | `nbl.subagent-driven-development` |
+| `parallel` | Multiple independent tasks exist, complex work | `nbl.parallel-subagent-driven-development` |
 
 ### Handoff Actions
 
 **Inline mode:**
 - Invoke `nbl.executing-plans` skill
-- Execute single task in current session
+- Execute tasks in current session (main agent handles directly)
 
 **Serial mode:**
 - Invoke `nbl.subagent-driven-development` skill
