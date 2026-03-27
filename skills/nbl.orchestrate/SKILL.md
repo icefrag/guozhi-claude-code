@@ -37,14 +37,15 @@ digraph orchestrate_feature_workflow {
 
     "6. Choose execution mode" [shape=diamond fillcolor=lightyellow];
 
-    "7a. subagent-driven-development\n(Same session, sequential)" [fillcolor=lightpink];
-    "7b. parallel-subagent-driven-development\n(Same session, parallel tasks)" [fillcolor=lightpink];
-    "7c. executing-plans\n(Parallel session, no subagent support)" [fillcolor=lightpink];
+    "7a. subagent-driven-development\n(per-task: implementer → spec review → quality review)" [fillcolor=lightpink];
+    "7b. parallel-subagent-driven-development\n(per-task: implementer → spec review → quality review → rebase → merge)" [fillcolor=lightpink];
+    "7c. executing-plans\n(no built-in review)" [fillcolor=lightpink];
 
     "8. All tasks complete?" [shape=diamond fillcolor=lightyellow];
-    "9. requesting-code-review" [fillcolor=lightpink];
-    "10. finishing-a-development-branch" [fillcolor=lightpink];
-    "11. Return to main window" [shape=doublecircle fillcolor=lightblue];
+    "9. Final global code review\n(requesting-code-review)" [fillcolor=lightpink];
+    "10. receiving-code-review" [shape=diamond fillcolor=lightyellow];
+    "11. finishing-a-development-branch" [fillcolor=lightpink];
+    "12. Return to main window" [shape=doublecircle fillcolor=lightblue];
 
     "1. User starts /orchestrate feature" -> "2. brainstorming skill\n[Main Window]";
     "2. brainstorming skill\n[Main Window]" -> "3. Output: docs/nbl/specs/\n<date>-<topic>-design.md";
@@ -53,54 +54,89 @@ digraph orchestrate_feature_workflow {
     "4. writing-plans skill\n[Main Window]" -> "5. Output: docs/nbl/plans/\n<date>-<feature>.md";
     "5. Output: docs/nbl/plans/\n<date>-<feature>.md" -> "6. Choose execution mode";
 
-    "6. Choose execution mode" -> "7a. subagent-driven-development\n(Same session, sequential)" [label="tasks sequential"];
-    "6. Choose execution mode" -> "7b. parallel-subagent-driven-development\n(Same session, parallel tasks)" [label="tasks parallelizable"];
-    "6. Choose execution mode" -> "7c. executing-plans\n(Parallel session, no subagent support)" [label="no subagent support"];
+    "6. Choose execution mode" -> "7a. subagent-driven-development\n(per-task: implementer → spec review → quality review)" [label="subagents + tightly coupled"];
+    "6. Choose execution mode" -> "7b. parallel-subagent-driven-development\n(per-task: implementer → spec review → quality review → rebase → merge)" [label="subagents + independent tasks"];
+    "6. Choose execution mode" -> "7c. executing-plans\n(no built-in review)" [label="no subagent support"];
 
-    "7a. subagent-driven-development\n(Same session, sequential)" -> "8. All tasks complete?";
-    "7b. parallel-subagent-driven-development\n(Same session, parallel tasks)" -> "8. All tasks complete?";
-    "7c. executing-plans\n(Parallel session, no subagent support)" -> "8. All tasks complete?";
+    "7a. subagent-driven-development\n(per-task: implementer → spec review → quality review)" -> "8. All tasks complete?";
+    "7b. parallel-subagent-driven-development\n(per-task: implementer → spec review → quality review → rebase → merge)" -> "8. All tasks complete?";
+    "7c. executing-plans\n(no built-in review)" -> "8. All tasks complete?";
 
     "8. All tasks complete?" -> "6. Choose execution mode" [label="no - issues"];
-    "8. All tasks complete?" -> "9. requesting-code-review" [label="yes"];
+    "8. All tasks complete?" -> "9. Final global code review\n(requesting-code-review)" [label="yes"];
 
-    "9. requesting-code-review" -> "10. finishing-a-development-branch";
-    "10. finishing-a-development-branch" -> "11. Return to main window";
+    "9. Final global code review\n(requesting-code-review)" -> "10. receiving-code-review";
+    "10. receiving-code-review" -> "7a. subagent-driven-development\n(per-task: implementer → spec review → quality review)" [label="issues → fix"];
+    "10. receiving-code-review" -> "11. finishing-a-development-branch" [label="passed"];
+
+    "11. finishing-a-development-branch" -> "12. Return to main window";
 }
 ```
 
+### Code Review 出现在两个层级
+
+| 层级 | 时机 | 内容 | 处理方式 |
+|------|------|------|---------|
+| **任务级**（内置在 7a/7b 中） | 每个任务完成后 | Stage 1: Spec Review → Stage 2: Quality Review | 实现子代理修复 → 重新审查 → 循环直到通过 |
+| **全局级**（步骤 9-10） | 所有任务完成后 | 整体代码审查 | receiving-code-review 处理反馈 → 有问题则返回修复 → 通过则继续 |
+
+**注意：** executing-plans（7c）没有内置任务级审查，因此全局审查（步骤 9）是其唯一的代码质量保障。
+
 ## Execution Mode Selection
+
+到达此阶段时，brainstorming 和 writing-plans 已完成，已有实现计划在手。决策依据两个维度：**是否有子代理支持**、**任务间是否独立**。
 
 ```dot
 digraph execution_mode_selection {
     rankdir=TB;
 
-    "Have implementation plan?" [shape=diamond];
-    "Tasks mostly independent?" [shape=diamond];
     "Subagent support available?" [shape=diamond];
-    "parallel-subagent-driven-development" [shape=box style=filled fillcolor=lightpink];
-    "subagent-driven-development" [shape=box style=filled fillcolor=lightpink];
+    "Tasks can be grouped by\ndependency level?" [shape=diamond];
+    "parallel-subagent-\ndriven-development" [shape=box style=filled fillcolor=lightpink];
+    "subagent-driven-\ndevelopment" [shape=box style=filled fillcolor=lightpink];
     "executing-plans" [shape=box style=filled fillcolor=lightpink];
-    "Brainstorm first" [shape=box];
 
-    "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have implementation plan?" -> "Brainstorm first" [label="no"];
-
-    "Tasks mostly independent?" -> "Subagent support available?" [label="yes"];
-    "Tasks mostly independent?" -> "Brainstorm first" [label="no - tightly coupled"];
-
-    "Subagent support available?" -> "parallel-subagent-driven-development" [label="yes"];
-    "Subagent support available?" -> "executing-plans" [label="no"];
+    "Subagent support available?" -> "Tasks can be grouped by\ndependency level?" [label="yes"];
+    "Subagent support available?" -> "executing-plans" [label="no\n(fallback)"];
+    "Tasks can be grouped by\ndependency level?" -> "parallel-subagent-\ndriven-development" [label="yes\n(independent tasks)"];
+    "Tasks can be grouped by\ndependency level?" -> "subagent-driven-\ndevelopment" [label="no\n(tightly coupled)"];
 }
 ```
 
 ### Mode Comparison
 
-| Mode | Session | Execution | Best For |
-|------|---------|-----------|----------|
-| **parallel-subagent-driven-development** | Same | Parallel (max 5) | Independent tasks, fast iteration |
-| **subagent-driven-development** | Same | Sequential | Tightly coupled tasks |
-| **executing-plans** | Parallel | Sequential | No subagent support |
+| 维度 | parallel-subagent-driven-development | subagent-driven-development | executing-plans |
+|------|-------------------------------------|----------------------------|-----------------|
+| **子代理** | 有（每任务一个） | 有（每任务一个） | **无**（主代理自行执行） |
+| **并行度** | 同层并行（max 5） | 无（严格顺序） | 无（严格顺序） |
+| **会话** | 同一会话 | 同一会话 | **独立会话** |
+| **审查机制** | 两阶段（spec + quality） | 两阶段（spec + quality） | **无内置审查** |
+| **worktree** | 批量创建（每层） | 单个创建 | 仅建议（非强制） |
+| **rebase/merge** | 每任务 rebase → merge 到 base | 不需要（顺序无冲突） | 不需要 |
+| **冲突处理** | 内置 LLM 自动解决 rebase 冲突 | 无冲突风险 | 无冲突风险 |
+| **层级屏障** | 有（同层全部通过才进入下层） | 无 | 无 |
+| **质量保障** | 最高（并行 + 两阶段审查 + 层级屏障） | 高（两阶段审查） | **最低**（无审查） |
+| **成本** | 最高（多子代理 + 多次审查） | 中等 | 最低 |
+| **适用平台** | Claude Code / Codex | Claude Code / Codex | **无子代理的平台（降级）** |
+| **最佳场景** | 计划中有多个独立任务，追求速度 | 任务间紧耦合或计划较简单 | 子代理不可用时的降级方案 |
+
+### Decision Logic
+
+```
+子代理可用？
+├── YES → 任务能按依赖层级分组？
+│   ├── YES → parallel-subagent-driven-development
+│   │        （同层任务并行执行，层级屏障确保顺序）
+│   └── NO  → subagent-driven-development
+│             （任务紧耦合，顺序执行避免冲突）
+└── NO  → executing-plans
+          （降级方案：独立会话，主代理顺序执行）
+```
+
+**选择建议：**
+- **默认选择并行模式** — 大多数计划都包含可并行的独立任务，层级屏障保证了依赖顺序，是质量和效率的最佳平衡
+- **计划仅 1-2 个任务且紧耦合** → 顺序模式足够
+- **子代理不可用** → executing-plans 是唯一选择，但质量保障显著降低
 
 ## Bugfix Workflow
 
