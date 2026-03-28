@@ -1,6 +1,6 @@
 # nbl.superpowers - Claude Code 扩展技能集
 
-基于 Anthropic 官方 [superpowers](https://github.com/anthropics/claude-code/tree/main/plugins/superpowers) 技能体系的扩展。
+基于 [superpowers](https://github.com/obra/superpowers) 技能体系的扩展。
 
 ## 项目核心
 
@@ -9,8 +9,6 @@
 | 特性 | 说明 |
 |------|------|
 | **nbl.parallel-subagent-driven-development** | 支持多个独立任务同时分派给多个子代理并行执行，充分利用 Claude Code 的多代理能力，大幅提升复杂任务完成效率 |
-| **nbl.subagent-driven-development** | 子代理串行执行，适用于任务有依赖关系的场景 |
-| 完整工作流 | 保留从需求澄清 → 规划 → 执行 → 代码审查 → 收尾的完整流程 |
 
 所有其他 `nbl.*` skill 都是对官方 superpowers 对应 skill 的适配和增强，遵循官方 superpowers 的核心设计原则。
 
