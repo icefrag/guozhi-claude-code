@@ -207,7 +207,7 @@ For each completed agent:
    ```bash
    # Cleanup worktree - failure does not block the pipeline
    if [ -d "$worktree_path" ]; then
-       if git worktree remove "$worktree_path" 2>/dev/null; then
+       if git worktree remove --force "$worktree_path" 2>/dev/null; then
            echo "✅ Worktree cleaned: $worktree_path"
        else
            echo "⚠️ Warning: Failed to remove worktree $worktree_path - skipping, manual cleanup may be needed"

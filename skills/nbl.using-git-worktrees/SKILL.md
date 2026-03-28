@@ -99,7 +99,24 @@ ELSE:
 branch_name="feature/${base_name}"
 worktree_path=".worktrees/${base_name}"
 
-git worktree add "$worktree_path" -b "$branch_name"
+if ! git worktree add "$worktree_path" -b "$branch_name" 2>/dev/null; then
+    # Creation failed, attempt smart recovery
+    if [ -d "$worktree_path" ]; then
+        # Case 1: worktree directory already exists → reuse it
+        echo "Worktree already exists at $worktree_path, reusing."
+    elif git show-ref --verify --quiet "refs/heads/$branch_name"; then
+        # Case 2: branch exists but worktree doesn't → re-attach with existing branch
+        echo "Branch $branch_name exists, re-attaching worktree."
+        if ! git worktree add "$worktree_path" "$branch_name"; then
+            echo "ERROR: Failed to re-attach existing worktree."
+            exit 1
+        fi
+    else
+        # Case 3: other causes (disk full, permissions) → exit with error
+        echo "ERROR: Failed to create worktree. Please check disk space and permissions."
+        exit 1
+    fi
+fi
 cd "$worktree_path"
 ```
 
@@ -168,7 +185,21 @@ for task_id in 1 3 5; do
     branch_name="feature/${base_name}-task${task_id}"
     worktree_path=".worktrees/${base_name}-task${task_id}"
 
-    git worktree add "$worktree_path" -b "$branch_name"
+    if ! git worktree add "$worktree_path" -b "$branch_name" 2>/dev/null; then
+        # Creation failed, attempt smart recovery
+        if [ -d "$worktree_path" ]; then
+            echo "Worktree for task $task_id already exists, reusing."
+        elif git show-ref --verify --quiet "refs/heads/$branch_name"; then
+            echo "Branch $branch_name exists, re-attaching worktree for task $task_id."
+            if ! git worktree add "$worktree_path" "$branch_name"; then
+                echo "ERROR: Failed to re-attach worktree for task $task_id."
+                exit 1
+            fi
+        else
+            echo "ERROR: Failed to create worktree for task $task_id."
+            exit 1
+        fi
+    fi
 done
 ```
 
@@ -178,7 +209,7 @@ After a task is merged to base branch (note: for parallel mode, cleanup happens 
 
 ```bash
 # Remove worktree
-git worktree remove ".worktrees/${base_name}-task${task_id}"
+git worktree remove --force ".worktrees/${base_name}-task${task_id}"
 # Delete branch
 git branch -d "feature/${base_name}-task${task_id}"
 ```

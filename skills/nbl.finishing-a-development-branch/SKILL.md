@@ -144,7 +144,7 @@ git worktree list | grep $(git branch --show-current)
 
 If yes:
 ```bash
-git worktree remove <worktree-path>
+git worktree remove --force <worktree-path>
 ```
 
 **For Option 3:** Keep worktree.
@@ -175,7 +175,7 @@ if [ -d ".worktrees" ] && [ "$(ls -A .worktrees)" ]; then
                 # Check if worktree still exists (may have been cleaned up already)
                 if [ -d "$wt_path" ]; then
                     echo "Removing merged worktree: $wt_path (branch: $worktree_branch)"
-                    git worktree remove "$wt_path" 2>/dev/null || true
+                    git worktree remove --force "$wt_path" 2>/dev/null || true
                 else
                     echo "Worktree already cleaned: $wt_path"
                 fi
