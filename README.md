@@ -1,5 +1,7 @@
 # nbl.superpowers - Claude Code 扩展技能集
 
+**nbl** = **niubility**（牛逼）—— 名字来源于中文俚语，意为"极其出色、非常厉害"。
+
 基于 [superpowers](https://github.com/obra/superpowers) 技能体系的扩展。
 
 ## 项目核心
