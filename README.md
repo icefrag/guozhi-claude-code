@@ -1,22 +1,18 @@
-# Claude Code Skills 开发项目
+# nbl.superpowers - Claude Code 扩展技能集
 
-## 项目概述
+基于 Anthropic 官方 [superpowers](https://github.com/anthropics/claude-code/tree/main/plugins/superpowers) 技能体系的扩展。
 
-本项目是 Claude Code Skills 的设计与开发仓库，用于创建和维护服务于研发开发流程的 Claude Code Skills。
+## 项目核心
 
-### 项目目标
+本项目在官方 superpowers 基础上，重点扩展了 **多 sub agent 并行执行任务** 的能力：
 
-- **标准化开发流程**：通过 Skills 定义规范的开发工作流，涵盖需求澄清、规划、开发、测试、代码审查等全流程
-- **提升研发效率**：自动化重复性工作，减少人工决策成本
-- **保证代码质量**：内置代码审查、测试驱动开发等质量保障机制
+| 特性 | 说明 |
+|------|------|
+| **nbl.parallel-subagent-driven-development** | 支持多个独立任务同时分派给多个子代理并行执行，充分利用 Claude Code 的多代理能力，大幅提升复杂任务完成效率 |
+| **nbl.subagent-driven-development** | 子代理串行执行，适用于任务有依赖关系的场景 |
+| 完整工作流 | 保留从需求澄清 → 规划 → 执行 → 代码审查 → 收尾的完整流程 |
 
-### 核心内容
-
-| 类型 | 数量 | 说明 |
-|------|------|------|
-| Skills | 18+ | 覆盖完整开发生命周期的技能 |
-| Rules | 12 | 编码规范、架构规范、命名规范等 |
-| Agents | 1 | 代码审查代理 |
+所有其他 `nbl.*` skill 都是对官方 superpowers 对应 skill 的适配和增强，遵循官方 superpowers 的核心设计原则。
 
 ---
 
@@ -34,26 +30,12 @@
 
 ---
 
-# 项目配置
-
-此文件定义项目的开发规范和依赖关系。
-
-## 统一入口
-
-所有开发工作通过 `/orchestrate` 入口：
-
-```
-/orchestrate feature "<描述>"   # 新功能开发
-/orchestrate bugfix "<描述>"    # Bug修复
-```
-
 ## Skills
 
 ### 开发工作流
 
 | Skill | 描述 | 阶段 |
 |-------|------|------|
-| **nbl.orchestrate** | 统一入口，编排工作流 | 入口 |
 | **nbl.brainstorming** | 需求澄清和规格文档 | 需求 |
 | **nbl.writing-plans** | 详细计划 | 规划 |
 | **nbl.using-git-worktrees** | 隔离工作区 | 准备 |
@@ -75,6 +57,7 @@
 | **nbl.update-codemaps** | 更新CLAUDE.md | 项目结构变化 |
 | **nbl.update-rules** | 规则文件更新 | 修改编码规范 |
 | **nbl.writing-skills** | 编写新skill | 创建/修改skill |
+| **nbl.test-driven-development** | 测试驱动开发 | 新功能、bugfix |
 
 ## Rules
 
@@ -92,11 +75,9 @@
 
 ## 工作流
 
-所有任务都遵循统一流程：
+直接使用所需 skill：
 
 ```
-/orchestrate feature/bugfix
-    ↓
 brainstorming → design.md
     ↓
 writing-plans → plan.md
@@ -116,7 +97,6 @@ agents/
 └── code-reviewer.md          # 代码审查 agent
 
 skills/
-├── nbl.orchestrate/                 # 统一入口
 ├── nbl.brainstorming/               # 需求澄清
 ├── nbl.writing-plans/               # 详细计划
 ├── nbl.using-git-worktrees/         # 隔离工作区
@@ -145,3 +125,36 @@ skills/
 |---------|------|------|
 | ✅ 项目规则 | `rules/common/xxx.md` | 本项目专用规则 |
 | ❌ 全局规则 | `~/.claude/rules/common/xxx.md` | 所有项目共享规则 |
+
+### Skill 修改审批规则
+
+修改 `skills/` 目录下的任何文件时，**必须**满足以下条件：
+
+| 要求 | 说明 |
+|------|------|
+| **阐述修改优点** | 详细说明此次修改带来的具体价值，包括解决的问题、提升的效果、避免的风险 |
+| **说明修改必要性** | 解释为什么现有实现无法满足需求，为什么必须通过修改 skill 来解决 |
+| **评估影响范围** | 列出修改可能影响的其他 skills、agents 或工作流程 |
+| **提供测试验证** | 如适用，说明如何验证修改后的 skill 仍然按预期工作 |
+
+**禁止的修改理由：**
+
+| ❌ 无效理由 | 原因 |
+|------------|------|
+| "这样看起来更简洁" | 简洁不等于更好，可能丢失关键信息 |
+| "我觉得可以优化" | 优化需要具体目标和可衡量的改进 |
+| "这是小改动" | skill 文档的小改动可能导致 agent 行为的重大变化 |
+| "与其他地方保持一致" | 一致性本身不是目的，需要证明一致性带来的价值 |
+
+**只有当修改能够带来明确、可阐述的优点时，才允许进行修改。** 没有足够优点的修改将被拒绝。
+
+### Skill 命名规范
+
+本项目所有 skill 都必须使用 **`nbl.` 前缀**，保持命名一致性：
+
+| 命名方式 | 示例 | 是否允许 |
+|---------|------|---------|
+| ✅ 正确 | `nbl.executing-plans`, `nbl.brainstorming` | 允许 |
+| ❌ 错误 | `executing-plans`, `superpowers:executing-plans` | 禁止 |
+
+所有 skill 内部引用其他 skill 时，也必须使用 `nbl.xxx` 格式，不能使用 `superpowers:xxx` 格式。
