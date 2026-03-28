@@ -22,7 +22,7 @@
 
 ```bash
 # 添加插件市场
-/plugin marketplace add https://github.com/icefrag/java-claude-code
+/plugin marketplace add https://github.com/icefrag/nbl-superpowers
 
 # 安装插件
 /plugin install nbl@nbl-dev
