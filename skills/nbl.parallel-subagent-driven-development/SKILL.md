@@ -199,9 +199,10 @@ For each completed agent:
 1. **Stage 1: Spec Review** - Verify implementation matches spec
 2. **Stage 2: Code Quality Review** - Verify code quality
 3. **Fix Issues** - If either stage fails, implementer fixes and re-reviews
-4. **Rebase** - `git rebase $base_branch` (handle conflicts if any)
+4. **Rebase** (in task worktree, on task branch) - `git rebase $base_branch` (handle conflicts if any)
    - `$base_branch` is the branch we created worktrees from (e.g., main, dev, master)
-5. **Merge** - `git merge --ff-only $base_branch` into $base_branch
+5. **Merge** (in main workspace, on base branch) - `git checkout $base_branch && git merge --ff-only $task_branch`
+   - `$task_branch` is the branch for this task (e.g., `feature/{base_name}-task{task_id}`)
 6. **Cleanup worktree** - Remove the task worktree immediately (non-blocking)
    ```bash
    # Cleanup worktree - failure does not block the pipeline
@@ -414,55 +415,6 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
-## Handling Multiple Parallel Questions
-
-When multiple agents are running in parallel (Pipeline mode), multiple agents may ask clarifying questions at different times. Use a **FIFO queue** to manage pending questions:
-
-### Algorithm
-
-```
-Maintain: pending_questions = FIFO queue
-Maintain: currently_answering = null
-
-When an agent asks a question:
-    Add (task_id, question, agent_context) to pending_questions
-    If currently_answering is null:
-        Dequeue → present question to user
-        currently_answering = this question
-
-When user answers the current question:
-    Send answer back to the asking agent
-    Agent continues execution
-    currently_answering = null
-    If pending_questions not empty:
-        Dequeue next → present to user
-        currently_answering = next question
-
-When any agent completes implementation:
-    If it has no pending questions → proceed to review
-    If it has questions waiting → stays queued until answered
-```
-
-### Key Rules
-
-1. **One question at a time to the user** - Never overwhelm user with multiple simultaneous questions
-2. **FIFO ordering** - Questions are answered in the order they arrive
-3. **Other agents keep running** - Question queuing doesn't block other agents from continuing
-4. **No forced waiting** - First question to arrive is first to be answered, no need to wait for "all questions to arrive"
-5. **Implementation completion doesn't skip queue** - Even if an agent finishes implementation before its question is answered, it still waits its turn in the queue
-
-### Example: 3 Parallel Agents
-
-```
-Dispatch 3 agents → pending = [], current = null
-Agent B asks question → pending = [B], current = B → present B to user
-  While user answering B: Agent A asks → pending = [A]
-  While user answering B: Agent C asks → pending = [A, C]
-User answers B → B resumes → pending = [A], current = A → present A
-User answers A → A resumes → pending = [C], current = C → present C
-User answers C → C resumes → pending = [], current = null → wait for completion
-```
-
 ## Prompt Templates
 
 Prompt templates are shared with serial subagent-driven-development:
@@ -527,6 +479,7 @@ Prompt templates are shared with serial subagent-driven-development:
 - Answer clearly and completely
 - Provide additional context if needed
 - Don't rush them into implementation
+- **Parallel mode:** One question at a time to the user - other agents keep running while waiting
 
 **If reviewer finds issues:**
 - Implementer (same subagent) fixes them
