@@ -149,35 +149,45 @@ After writing and self-reviewing the plan, first assess task complexity to deter
 
 ### Inline Mode Selection
 
-**Use inline mode (main agent executes directly) when the task is low complexity.** Subagents are only needed for complex work that pollutes context.
+**Use inline mode (main agent executes directly) ONLY when the task is unambiguously and definitely simple.** Subagents handle complex work that benefits from context isolation. When in doubt, prefer subagents.
 
-**Typical low complexity tasks suitable for inline:**
-- Fixing typos/spelling mistakes
-- Modifying configuration values
-- Adjusting UI text/styles/CSS
-- Removing dead code/unused imports
-- Single-point bug fixes (one function/location)
-- Any small change that touches 1-2 files, <100 lines total
+**Inline 判定：ALL of the following must be true**
 
-**Guidelines for inline:**
-- If the change is small, clear, and doesn't require exploration → use `inline`
-- If the change is large, requires exploration, or needs user clarification → don't use `inline`
-- Even with multiple tasks, if all are small and clearly defined → you can still use `inline`
-- Trust your judgment: if it doesn't need a subagent → use inline
+1. **Mechanical change only**: All changes are mechanical, no complex business logic understanding required
+   - Fixing typos/spelling mistakes
+   - Modifying configuration values (changing a number/string)
+   - Adjusting UI text, colors, or CSS styles
+   - Removing dead code, unused imports, or unused files
+   - Single-point bug fix in one clearly-scoped function
+
+2. **No exploration needed**: You already know exactly where and how to change when writing the plan, no need to read existing code to understand context
+
+3. **Small scope**: Total change touches 1-2 files, <100 lines of code total
+
+4. **Short chain**: If there are multiple tasks, the longest dependency chain has ≤3 tasks
+
+**Guidelines:**
+- Only use `inline` when **all four conditions above are true**
+- If any condition isn't met → skip inline, go to serial/parallel
+- When in doubt → don't use inline (err on the side of subagents)
+- The LLM makes the final call — these are just clear signals for when inline is definitely safe
 
 ### Decision Logic
 
 ```python
 # Pseudocode
 def determine_execution_mode(plan):
-    # Step 1: Check for low complexity, if yes use inline
-    if is_low_complexity_clearly_suitable_for_inline(plan):
-        return "inline"  # Low complexity, main agent handles directly
+    # Step 1: Only use inline if ALL conditions are met
+    if (plan.is_mechanical_change
+        and not plan.requires_code_exploration
+        and plan.total_files_touched <= 2
+        and plan.total_lines_changed < 100
+        and max_dependency_chain_length(plan.tasks) <= 3):
+        return "inline"  # Definitely simple, main agent handles directly
 
-    # Step 2: Not low complexity, analyze dependency levels
+    # Step 2: All other cases → analyze dependencies for serial/parallel
     levels = analyze_dependency_levels(plan.tasks)
-
-    if all(level has 1 task for level in levels):
+    if all(len(level) == 1 for level in levels):
         return "serial"  # Pure chain dependency, sequential subagent execution
     else:
         return "parallel"  # Has parallelizable tasks, parallel subagent execution
@@ -185,37 +195,46 @@ def determine_execution_mode(plan):
 
 ### Examples
 
-**Inline (low complexity):**
+**✅ Inline (all conditions met):**
 ```
 Task 1: Fix typo in error message
-  Small change, clear what to do
+→ All conditions satisfied → inline
 ```
 ```
 Task 1: Remove unused import in UserController
 Task 2: Delete unused UserService.getOldMethod()
-  Both small, no exploration needed
+→ All conditions satisfied → inline
+```
+
+**❌ Not inline (any condition fails):**
+```
+Task 1: Refactor authentication flow
+→ Not mechanical change → skip inline
+```
+```
+Task 1: Fix bug in caching logic
+→ Requires exploration → skip inline
+```
+```
+Task 1: Add config → Task 2: Update doc → Task 3: Add test → Task 4: Update integration
+→ Chain length 4 (>3) → skip inline
 ```
 
 **Serial (chain dependency, complex):**
 ```
 Task 1: Define User entity model
-  Large task, needs entity + validation + mapper
 Task 2: Create UserRepository with JPA queries
-  Depends on Task 1
 Task 3: Implement UserService with business logic
-  Depends on Task 2
+→ Not all inline conditions → serial
 ```
 
 **Parallel (multiple independent tasks, complex):**
 ```
 Task 1: Implement User authentication module
-  Complex, multiple files
 Task 2: Implement Order management module
-  Complex, multiple files
 Task 3: Implement Payment processing module
-  Complex, multiple files
-Task 4: Integration and end-to-end testing
-  Depends on Tasks 1, 2, 3
+Task 4: Integration testing
+→ Multiple independent complex tasks → parallel
 ```
 
 ### Output Format
