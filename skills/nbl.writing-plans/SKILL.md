@@ -280,13 +280,6 @@ After determining the mode:
 >
 > **Execution Mode:** inline | serial | parallel
 >
-> Compressing context...
->
 > Invoking `<skill-name>` to execute the plan."
 
-**Before invoking the execution skill, run `/compact` to compress the context:**
-```
-/compact
-```
-
-This frees up context space for the execution phase.
+Invoke the corresponding execution skill immediately.
