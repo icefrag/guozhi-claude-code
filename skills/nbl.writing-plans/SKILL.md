@@ -79,6 +79,11 @@ Each task MUST include dependency information for parallel execution planning:
 ````markdown
 ### Task N: [Component Name]
 
+**状态**
+- [ ] 开发完成
+- [ ] ✅ Spec compliance (规范一致性审核)
+- [ ] ✅ Code quality (代码质量审核)
+
 **Dependencies:** None | Task 1, Task 2
 **Parallelizable:** Yes | No (reason if No)
 
