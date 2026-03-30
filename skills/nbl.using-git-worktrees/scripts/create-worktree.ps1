@@ -3,9 +3,6 @@
 # create-worktree.ps1 - 创建或恢复 git worktree (PowerShell)
 #===============================================================================
 
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-. "$ScriptDir/lib/common.ps1"
-
 #-------------------------------------------------------------------------------
 # 参数解析
 #-------------------------------------------------------------------------------
@@ -15,11 +12,17 @@ param(
     [string]$BaseName,
 
     [Parameter(Position=1)]
-    [string]$TaskId = "",
+    [string]$TaskId,
 
     [Parameter(Position=2)]
-    [string]$OutputFile = ""
+    [string]$OutputFile
 )
+
+if ($null -eq $TaskId) { $TaskId = "" }
+if ($null -eq $OutputFile) { $OutputFile = "" }
+
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+. "$ScriptDir/lib/common.ps1"
 
 if ($BaseName -eq "-h" -or $BaseName -eq "--help") {
     Write-Host @"

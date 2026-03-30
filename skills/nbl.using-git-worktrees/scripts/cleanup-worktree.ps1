@@ -3,9 +3,6 @@
 # cleanup-worktree.ps1 - 清理 git worktree (PowerShell)
 #===============================================================================
 
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-. "$ScriptDir/lib/common.ps1"
-
 #-------------------------------------------------------------------------------
 # 参数解析
 #-------------------------------------------------------------------------------
@@ -15,10 +12,15 @@ param(
     [string]$BaseName,
 
     [Parameter(Position=1)]
-    [string]$TaskId = "",
+    [string]$TaskId,
 
     [switch]$Force
 )
+
+if ($null -eq $TaskId) { $TaskId = "" }
+
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+. "$ScriptDir/lib/common.ps1"
 
 if ($BaseName -eq "-h" -or $BaseName -eq "--help") {
     Write-Host @"

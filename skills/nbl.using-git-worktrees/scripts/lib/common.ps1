@@ -31,8 +31,10 @@ function Output-ErrorJson {
     param(
         [string]$File,
         [string]$Error,
-        [int]$ExitCode = 1
+        [int]$ExitCode
     )
+
+    if ($null -eq $ExitCode) { $ExitCode = 1 }
 
     @{
         success = $false
@@ -90,8 +92,10 @@ function Ensure-Gitignore {
 function Compute-Names {
     param(
         [string]$BaseName,
-        [string]$TaskId = ""
+        [string]$TaskId
     )
+
+    if ($null -eq $TaskId) { $TaskId = "" }
 
     if ($TaskId) {
         @{
