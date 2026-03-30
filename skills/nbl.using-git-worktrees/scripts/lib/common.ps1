@@ -75,18 +75,34 @@ function Ensure-GitRepo {
 function Ensure-Gitignore {
     $changed = $false
 
-    $ignoredWorktrees = git check-ignore .worktrees 2>$null
-    if (-not $ignoredWorktrees) {
-        Write-Host "ℹ️  .worktrees/ 未被 gitignore，正在添加..."
-        ".worktrees/" | Add-Content -Path ".gitignore" -Encoding UTF8
-        $changed = $true
-    }
-
-    $ignoredDocs = git check-ignore docs/ 2>$null
-    if (-not $ignoredDocs) {
-        Write-Host "ℹ️  docs/ 未被 gitignore，正在添加..."
+    if (-not (Test-Path ".gitignore")) {
+        ".worktrees/" | Out-File -FilePath ".gitignore" -Encoding UTF8
         "docs/" | Add-Content -Path ".gitignore" -Encoding UTF8
         $changed = $true
+    } else {
+        $lines = Get-Content ".gitignore"
+        $hasWorktrees = $false
+        $hasDocs = $false
+
+        foreach ($line in $lines) {
+            if ($line.Trim() -eq ".worktrees/") {
+                $hasWorktrees = $true
+            }
+            if ($line.Trim() -eq "docs/") {
+                $hasDocs = $true
+            }
+        }
+
+        if (-not $hasWorktrees) {
+            Write-Host "ℹ️  .worktrees/ 未被 gitignore，正在添加..."
+            ".worktrees/" | Add-Content -Path ".gitignore" -Encoding UTF8
+            $changed = $true
+        }
+        if (-not $hasDocs) {
+            Write-Host "ℹ️  docs/ 未被 gitignore，正在添加..."
+            "docs/" | Add-Content -Path ".gitignore" -Encoding UTF8
+            $changed = $true
+        }
     }
 
     if ($changed) {
