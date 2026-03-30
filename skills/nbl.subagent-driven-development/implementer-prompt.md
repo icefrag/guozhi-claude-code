@@ -71,35 +71,40 @@ Task tool (general-purpose):
     The controller can provide more context, re-dispatch with a more capable model,
     or break the task into smaller pieces.
 
-    ## Before Reporting Back: Built-In Two-Stage Review
+    ## Before Reporting Back: Built-In Two-Stage Review (MANDATORY)
 
-    You MUST perform TWO FULL review stages yourself before reporting done. This is NON-NEGOTIABLE. If you find issues, you MUST fix them before reporting.
+    You MUST perform TWO FULL review stages before reporting done.
+    This is NON-NEGOTIABLE and NON-BYPASSABLE.
+    If you find issues, you MUST fix them before reporting.
+    Your report MUST include the review results — reports without them will be REJECTED.
 
-    ### Stage 1: Spec Compliance Self-Review
+    ### Stage 1: Spec Compliance Self-Review (MANDATORY)
 
-    Review your implementation against the task specification **LINE BY LINE**. Read the task requirements again and verify every point.
+    Read the spec compliance review template at:
+      [SKILL_DIR]/spec-reviewer-prompt.md
 
-    **Check for:**
-    - **Missing requirements:** Did you implement EVERYTHING that was requested? Are there any requirements you skipped or missed?
-    - **Extra/unneeded work:** Did you build things that weren't requested? Did you add "nice to haves" that weren't in the spec? Did you over-engineer?
-    - **Misunderstandings:** Did you interpret the requirements correctly? Are you solving the right problem?
+    Apply EVERY check item from that template to your implementation.
+    Review your implementation against the task specification **LINE BY LINE**.
 
     **DO NOT** trust your initial implementation. Verify everything independently.
 
-    **If you find issues:** **FIX THEM NOW**. After fixing, review the spec again to confirm. Do NOT proceed to Stage 2 until Stage 1 passes with NO issues.
+    **If you find issues:** **FIX THEM NOW**. After fixing, review the spec again to confirm.
+    Do NOT proceed to Stage 2 until Stage 1 passes with NO issues.
 
-    ### Stage 2: Code Quality Self-Review
+    ### Stage 2: Code Quality Self-Review (MANDATORY)
 
-    After Stage 1 passes, review your code quality.
+    Read the code quality review template at:
+      [SKILL_DIR]/code-quality-reviewer-prompt.md
 
-    **Check for:**
-    - **Completeness:** Are all edge cases handled? Does everything work together?
-    - **Cleanliness:** Are names clear and accurate? Is the code readable? Does each file have one clear responsibility?
-    - **Discipline:** Did you avoid overbuilding (YAGNI)? Did you only build what was requested? Did you follow existing patterns in the codebase?
-    - **Testing:** Do tests actually verify behavior (not just mock behavior)? Are tests comprehensive? Did you follow TDD if required?
-    - **Project conventions:** Does the code follow the project's architecture, naming, and coding conventions?
+    Apply EVERY check item from that template to your code.
+    In addition to the standard quality checks, verify:
+    - Does each file have one clear responsibility with a well-defined interface?
+    - Are units decomposed so they can be understood and tested independently?
+    - Is the implementation following the file structure from the plan?
+    - Did this implementation create new files that are already large, or significantly grow existing files?
 
-    **If you find issues:** **FIX THEM NOW**. After fixing, review again. Do NOT report done until BOTH stages pass with NO issues.
+    **If you find issues:** **FIX THEM NOW**. After fixing, review again.
+    Do NOT report done until BOTH stages pass with NO issues.
 
     ## Report Format
 
@@ -108,10 +113,14 @@ Task tool (general-purpose):
     - What you implemented (or what you attempted, if blocked)
     - What you tested and test results
     - Files changed
-    - **Built-in Two-Stage Review Results:**
+    - **Built-in Two-Stage Review Results:** (REQUIRED — omitting this will result in rejection)
       - Stage 1 (Spec Compliance): PASSED or FIXED [list issues found and fixed]
       - Stage 2 (Code Quality): PASSED or FIXED [list issues found and fixed]
     - Any remaining issues or concerns
+
+    **IMPORTANT:** The Two-Stage Review Results section is MANDATORY.
+    Your report MUST include the results of BOTH stages, even if they passed.
+    If you omit this section, the controller will REJECT your report.
 
     Use DONE_WITH_CONCERNS if you completed the work but have doubts about correctness.
     Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need
