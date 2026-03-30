@@ -5,11 +5,11 @@ description: Use when executing implementation plans with parallelizable tasks -
 
 # Parallel Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute plan by dispatching fresh subagent per task. Each implementer performs built-in two-stage self-review (spec compliance + code quality) before reporting done. After all tasks complete in all levels, perform global two-stage review on all merged code.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Fresh subagent per task with built-in two-stage self-review + global review after all tasks = high quality, fast iteration
 
 **Parallel execution:** Analyzes task dependencies, groups tasks by level, and executes independent tasks in parallel within each level.
 
@@ -57,28 +57,27 @@ Every implementation task MUST:
 
 **Never:** Skip TDD skill, write implementation before tests
 
-### 3. Two-Stage Review (MANDATORY)
+### 3. Built-In Two-Stage Self-Review (MANDATORY)
 
 ```
-After implementer completes:
-├── Stage 1: Spec compliance review
-│   ├── Invoke nbl.requesting-code-review skill
-│   ├── Use spec-reviewer-prompt.md template
-│   ├── ❌ Issues? → Implementer fixes → Re-review
+Each implementer MUST complete this before reporting DONE:
+├── Stage 1: Spec compliance self-review
+│   ├── Check all requirements line-by-line
+│   ├── ❌ Issues? → Implementer fixes immediately
 │   └── ✅ Pass → Proceed to Stage 2
-├── Stage 2: Code quality review
-│   ├── Invoke nbl.requesting-code-review skill
-│   ├── Use code-quality-reviewer-prompt.md template
-│   ├── ❌ Issues? → Implementer fixes → Re-review
-│   └── ✅ Pass → Task complete
-└── Never skip either stage
+├── Stage 2: Code quality self-review
+│   ├── Check code quality, naming, conventions
+│   ├── ❌ Issues? → Implementer fixes immediately
+│   └── ✅ Pass → Report DONE
+└── Never report DONE until both stages pass with NO issues
 ```
 
 **Never:**
-- Let implementer self-review replace actual review
-- Skip spec compliance review
-- Skip code quality review
-- Proceed to next task with open review issues
+- Skip either stage of self-review
+- Report DONE with unfixed issues
+- Proceed to merge with open issues
+
+**This is NON-NEGOTIABLE.** Each task must pass both stages of self-review before it can be merged.
 
 </NON_NEGOTIABLE>
 
@@ -117,8 +116,9 @@ Level 2: ...                  # Depends on Level 1
 For each level:
     ├── Create worktrees for tasks in this level (max 5 per batch)
     ├── Dispatch agents in parallel
-    ├── Process each completion (spec review → quality review → rebase → merge)
-    ├── Wait all tasks in level complete (ALL steps)
+    ├── Wait all tasks complete (implementer does built-in two-stage self-review)
+    ├── Rebase each task branch to base branch
+    ├── Merge all task branches to base branch
     └── Proceed to next level
 ```
 
@@ -128,12 +128,10 @@ For each level:
 
 | Step | Description | Must Pass? |
 |------|-------------|------------|
-| 1 | Implementer reports DONE | ✅ |
-| 2 | Spec compliance review | ✅ |
-| 3 | Code quality review | ✅ |
-| 4 | Rebase to base | ✅ |
-| 5 | Merge to base | ✅ |
-| 6 | Mark all three task statuses complete in plan file status area | ✅ |
+| 1 | Implementer reports DONE (with built-in self-review passed) | ✅ |
+| 2 | Rebase to base | ✅ |
+| 3 | Merge to base | ✅ |
+| 4 | Mark task statuses complete in plan file | ✅ |
 
 **Key rule:** Level completion = ALL tasks passed ALL steps.
 
@@ -141,7 +139,7 @@ For each level:
 
 If any task fails at any step:
 1. **Level is blocked** — do NOT proceed to next level
-2. **Fix the failing task** — implementer fixes, re-review
+2. **Fix the failing task** — implementer fixes, re-review if needed
 3. **Resume once all tasks pass** — then proceed to next level
 
 ## Pipeline Execution
@@ -158,19 +156,17 @@ digraph pipeline_flow {
         label="Parallel Dispatch";
         style=filled fillcolor=lightblue;
         "Create worktrees (max 5 per batch)" [shape=box];
-        "Dispatch N agents in parallel" [shape=box];
+        "Dispatch N implementers (each with built-in two-stage review)" [shape=box];
     }
 
     subgraph cluster_process {
         label="Process Each Completion (Sequential)";
         style=filled fillcolor=lightyellow;
         "Wait for ANY agent to complete" [shape=diamond];
-        "Stage 1: Spec Review" [shape=box];
-        "Fix spec issues" [shape=box];
-        "Stage 2: Code Quality Review" [shape=box];
-        "Fix quality issues" [shape=box];
+        "Implementer reports DONE (self-review passed)" [shape=box];
         "Rebase to base" [shape=box];
         "Merge to base" [shape=box];
+        "Cleanup worktree" [shape=box];
     }
 
     subgraph cluster_loop {
@@ -179,17 +175,13 @@ digraph pipeline_flow {
         "Level complete" [shape=box];
     }
 
-    "Create worktrees (max 5 per batch)" -> "Dispatch N agents in parallel";
-    "Dispatch N agents in parallel" -> "Wait for ANY agent to complete";
-    "Wait for ANY agent to complete" -> "Stage 1: Spec Review";
-    "Stage 1: Spec Review" -> "Fix spec issues" [label="issues found"];
-    "Fix spec issues" -> "Stage 1: Spec Review" [constraint=false];
-    "Stage 1: Spec Review" -> "Stage 2: Code Quality Review" [label="passed"];
-    "Stage 2: Code Quality Review" -> "Fix quality issues" [label="issues found"];
-    "Fix quality issues" -> "Stage 2: Code Quality Review" [constraint=false];
-    "Stage 2: Code Quality Review" -> "Rebase to base" [label="passed"];
+    "Create worktrees (max 5 per batch)" -> "Dispatch N implementers (each with built-in two-stage review)";
+    "Dispatch N implementers (each with built-in two-stage review)" -> "Wait for ANY agent to complete";
+    "Wait for ANY agent to complete" -> "Implementer reports DONE (self-review passed)";
+    "Implementer reports DONE (self-review passed)" -> "Rebase to base";
     "Rebase to base" -> "Merge to base";
-    "Merge to base" -> "More agents pending?";
+    "Merge to base" -> "Cleanup worktree";
+    "Cleanup worktree" -> "More agents pending?";
     "More agents pending?" -> "Wait for ANY agent to complete" [label="yes"];
     "More agents pending?" -> "Level complete" [label="no"];
 }
@@ -199,14 +191,12 @@ digraph pipeline_flow {
 
 For each completed agent:
 
-1. **Stage 1: Spec Review** - Verify implementation matches spec
-2. **Stage 2: Code Quality Review** - Verify code quality
-3. **Fix Issues** - If either stage fails, implementer fixes and re-reviews
-4. **Rebase** (in task worktree, on task branch) - `git rebase $base_branch` (handle conflicts if any)
+1. **Implementer completes:** implement → spec self-check → fix → quality self-check → fix → DONE
+2. **Rebase** (in task worktree, on task branch) - `git rebase $base_branch` (handle conflicts if any)
    - `$base_branch` is the branch we created worktrees from (e.g., main, dev, master)
-5. **Merge** (in main workspace, on base branch) - `git checkout $base_branch && git merge --ff-only $task_branch`
+3. **Merge** (in main workspace, on base branch) - `git checkout $base_branch && git merge --ff-only $task_branch`
    - `$task_branch` is the branch for this task (e.g., `feature/{base_name}-task{task_id}`)
-6. **Cleanup worktree** - Remove the task worktree immediately (non-blocking)
+4. **Cleanup worktree** - Remove the task worktree immediately (non-blocking)
    ```bash
    # Cleanup worktree - failure does not block the pipeline
    if [ -d "$worktree_path" ]; then
@@ -215,17 +205,15 @@ For each completed agent:
        else
            echo "⚠️ Warning: Failed to remove worktree $worktree_path - skipping, manual cleanup may be needed"
        fi
-   fi
+   end
    ```
-7. **Keep branch** - Branch deletion is handled by `finishing-a-development-branch` after all tasks complete
+5. **Keep branch** - Branch deletion is handled by `finishing-a-development-branch` after all tasks complete
 
 ### Error Handling
 
 | Scenario | Action |
 |----------|--------|
-| Spec review fails | Implementer fixes spec gaps, re-review |
-| Code quality review fails | Implementer fixes quality issues, re-review |
-| Agent blocked | Main agent provides context or re-dispatches |
+| Implementer cannot complete (BLOCKED/NEEDS_CONTEXT) | Main agent provides context or re-dispatches |
 | Rebase conflict | Follow "Rebase Conflict Resolution" section below |
 | Merge fails | Rollback, fix, retry |
 | **Any task in level fails** | **Whole level blocked — do NOT proceed to next level** |
@@ -298,7 +286,7 @@ digraph process {
         label="For Each Level (Sequential)";
         style=filled fillcolor=lightyellow;
         "Create worktrees for tasks in this level (max 5)" [shape=box style=filled fillcolor=lightpink];
-        "Dispatch N agents in parallel" [shape=box style=filled fillcolor=lightblue];
+        "Dispatch N implementers (each with built-in two-stage review)" [shape=box style=filled fillcolor=lightblue];
     }
 
     // Pre-execution flow
@@ -311,12 +299,10 @@ digraph process {
         label="Pipeline Processing";
         style=filled fillcolor=lightblue;
         "Wait for ANY completion" [shape=diamond];
-        "Stage 1: Spec Review" [shape=diamond];
-        "Fix spec issues" [shape=box];
-        "Stage 2: Code Quality Review" [shape=diamond];
-        "Fix quality issues" [shape=box];
+        "Implementer reports DONE (built-in self-review passed)" [shape=box];
         "Rebase to base" [shape=box];
         "Merge to base" [shape=box];
+        "Cleanup worktree" [shape=box];
         "More agents pending?" [shape=diamond];
         "Level complete" [shape=box];
     }
@@ -329,26 +315,24 @@ digraph process {
 
     subgraph cluster_finish {
         label="All Levels Complete";
-        "Dispatch final code reviewer" [shape=box];
+        "Global Stage 1: Spec review (all changes)" [shape=box];
+        "Global Stage 2: Code quality review (all changes)" [shape=box];
+        "Fix any issues found" [shape=box];
         "Use nbl.finishing-a-development-branch" [shape=doublecircle style=filled fillcolor=lightgreen];
     }
 
     // Setup flow
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Analyze dependencies → Build levels";
     "Analyze dependencies → Build levels" -> "Create worktrees for tasks in this level (max 5)";
-    "Create worktrees for tasks in this level (max 5)" -> "Dispatch N agents in parallel";
+    "Create worktrees for tasks in this level (max 5)" -> "Dispatch N implementers (each with built-in two-stage review)";
 
     // Pipeline processing
-    "Dispatch N agents in parallel" -> "Wait for ANY completion";
-    "Wait for ANY completion" -> "Stage 1: Spec Review";
-    "Stage 1: Spec Review" -> "Fix spec issues" [label="issues found"];
-    "Fix spec issues" -> "Stage 1: Spec Review";
-    "Stage 1: Spec Review" -> "Stage 2: Code Quality Review" [label="passed"];
-    "Stage 2: Code Quality Review" -> "Fix quality issues" [label="issues found"];
-    "Fix quality issues" -> "Stage 2: Code Quality Review";
-    "Stage 2: Code Quality Review" -> "Rebase to base" [label="passed"];
+    "Dispatch N implementers (each with built-in two-stage review)" -> "Wait for ANY completion";
+    "Wait for ANY completion" -> "Implementer reports DONE (built-in self-review passed)";
+    "Implementer reports DONE (built-in self-review passed)" -> "Rebase to base";
     "Rebase to base" -> "Merge to base";
-    "Merge to base" -> "More agents pending?";
+    "Merge to base" -> "Cleanup worktree";
+    "Cleanup worktree" -> "More agents pending?";
     "More agents pending?" -> "Wait for ANY completion" [label="yes - continue"];
     "More agents pending?" -> "Level complete" [label="no"];
 
@@ -356,8 +340,11 @@ digraph process {
     "Level complete" -> "Mark level tasks complete (TodoWrite + Plan file)";
     "Mark level tasks complete (TodoWrite + Plan file)" -> "More levels?";
     "More levels?" -> "Create worktrees for tasks in this level (max 5)" [label="yes - next level"];
-    "More levels?" -> "Dispatch final code reviewer" [label="no"];
-    "Dispatch final code reviewer" -> "Use nbl.finishing-a-development-branch";
+    "More levels?" -> "Global Stage 1: Spec review (all changes)" [label="no"];
+    "Global Stage 1: Spec review (all changes)" -> "Global Stage 2: Code quality review (all changes)" [label="passed"];
+    "Global Stage 2: Code quality review (all changes)" -> "Fix any issues found" [label="issues found"];
+    "Fix any issues found" -> "Global Stage 1: Spec review (all changes)";
+    "Global Stage 2: Code quality review (all changes)" -> "Use nbl.finishing-a-development-branch" [label="passed"];
 }
 ```
 
@@ -374,8 +361,9 @@ digraph process {
 |------|----------|-------------|
 | **GATE 1: Branch Check** | BEFORE reading plan | If on main/master → **auto-create development branch** (feature/bugfix based on plan name). All tasks merge back to this dev branch. |
 | **GATE 2: TDD** | Implementer phase | MUST invoke `nbl.test-driven-development` skill |
-| **GATE 3: Spec Review** | After implementer | MUST invoke `nbl.requesting-code-review` with spec-reviewer template |
-| **GATE 4: Quality Review** | After spec review | MUST invoke `nbl.requesting-code-review` with code-quality template |
+| **GATE 3: Built-In Self-Review** | Implementer phase | Each implementer MUST perform two-stage self-review before reporting DONE |
+| **GATE 4: Global Spec Review** | After all levels complete | MUST invoke spec reviewer on all merged changes |
+| **GATE 5: Global Quality Review** | After global spec review | MUST invoke code quality reviewer on all merged changes |
 
 **Note:** Each task creates its own isolated worktree when dispatched. No top-level worktree is created at startup. After all tasks complete, everything is merged to the development branch (auto-created if starting from main). User manually merges dev branch to main when ready.
 
@@ -398,9 +386,9 @@ Use the least powerful model that can handle each role to conserve cost and incr
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Proceed to spec compliance review.
+**DONE:** Implementer completed the work **and** passed built-in two-stage self-review with all issues fixed. Mark task complete and proceed to rebase/merge.
 
-**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
+**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before merging. If they're observations (e.g., "this file is getting large"), note them and proceed.
 
 **NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
 
@@ -440,38 +428,36 @@ Prompt templates are shared with serial subagent-driven-development:
 - Parallel tasks complete faster
 
 **Quality gates:**
-- Self-review catches issues before handoff
-- Two-stage review: spec compliance, then code quality
-- Review loops ensure fixes actually work
-- Spec compliance prevents over/under-building
-- Code quality ensures implementation is well-built
+- Implementer finds and fixes issues before returning to main agent
+- Two-stage review still happens (just inside the implementer)
+- Final global review ensures quality across all changes
+- Same quality guarantees with fewer coordination steps
 
-**Cost:**
-- More subagent invocations (implementer + 2 reviewers per task)
-- Controller does more prep work (extracting all tasks upfront)
-- Review loops add iterations
-- But catches issues early (cheaper than debugging later)
+**Efficiency:**
+- One subagent invocation per task (with built-in two-stage review)
+- Fewer round-trips between main agent and subagents
+- Faster overall execution because implementer fixes issues before returning
+- Catches issues early (cheaper than debugging later)
 
 ## Red Flags
 
+**Never (NON-NEGOTIABLE):**
+- **Execute on main/master branch without explicit user consent**
+- **Dispatch an implementer without worktree isolation** (each task MUST have its own worktree, created via `nbl.using-git-worktrees` with taskId when dispatching)
+- **Accept DONE before built-in two-stage review completes** - MUST verify implementer performed both stages
+- **Skip TDD** - "implement first, test later" is forbidden
+
 **Never:**
-- Execute on main/master branch without explicit user consent
-- Dispatch an implementer without worktree isolation (each task MUST have its own worktree, created via `nbl.using-git-worktrees` with taskId when dispatching)
-- Skip reviews (spec compliance OR code quality)
-- Proceed with unfixed issues
+- Proceed with unfixed issues from self-review
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
-- Accept "close enough" on spec compliance (spec reviewer found issues = not done)
-- Skip review loops (reviewer found issues = implementer fixes = review again)
-- Let implementer self-review replace actual review (both are needed)
-- **Start code quality review before spec compliance is ✅** (wrong order)
-- Move to next task while either review has open issues
 - Dispatch more than 5 agents simultaneously
 - Skip CR before merge
 - Merge without rebasing first
 - Proceed to next level with failed agents
 - Ignore rebase conflicts
+- Skip the final global two-stage review after all levels complete
 
 **If subagent asks questions:**
 - Answer clearly and completely
@@ -479,14 +465,10 @@ Prompt templates are shared with serial subagent-driven-development:
 - Don't rush them into implementation
 - **Parallel mode:** One question at a time to the user - other agents keep running while waiting
 
-**If reviewer finds issues:**
-- Implementer (same subagent) fixes them
-- Reviewer reviews again
-- Repeat until approved
-- Don't skip the re-review
-
-**If subagent fails task:**
+**If global reviewer finds issues after all tasks complete:**
 - Dispatch fix subagent with specific instructions
+- Fix issues found by reviewers
+- Re-review after fixes
 - Don't try to fix manually (context pollution)
 
 ## Integration

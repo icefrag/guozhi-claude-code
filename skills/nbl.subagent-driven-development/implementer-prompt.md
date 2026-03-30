@@ -71,31 +71,35 @@ Task tool (general-purpose):
     The controller can provide more context, re-dispatch with a more capable model,
     or break the task into smaller pieces.
 
-    ## Before Reporting Back: Self-Review
+    ## Before Reporting Back: Built-In Two-Stage Review
 
-    Review your work with fresh eyes. Ask yourself:
+    You MUST perform TWO FULL review stages yourself before reporting done. This is NON-NEGOTIABLE. If you find issues, you MUST fix them before reporting.
 
-    **Completeness:**
-    - Did I fully implement everything in the spec?
-    - Did I miss any requirements?
-    - Are there edge cases I didn't handle?
+    ### Stage 1: Spec Compliance Self-Review
 
-    **Quality:**
-    - Is this my best work?
-    - Are names clear and accurate (match what things do, not how they work)?
-    - Is the code clean and maintainable?
+    Review your implementation against the task specification **LINE BY LINE**. Read the task requirements again and verify every point.
 
-    **Discipline:**
-    - Did I avoid overbuilding (YAGNI)?
-    - Did I only build what was requested?
-    - Did I follow existing patterns in the codebase?
+    **Check for:**
+    - **Missing requirements:** Did you implement EVERYTHING that was requested? Are there any requirements you skipped or missed?
+    - **Extra/unneeded work:** Did you build things that weren't requested? Did you add "nice to haves" that weren't in the spec? Did you over-engineer?
+    - **Misunderstandings:** Did you interpret the requirements correctly? Are you solving the right problem?
 
-    **Testing:**
-    - Do tests actually verify behavior (not just mock behavior)?
-    - Did I follow TDD if required?
-    - Are tests comprehensive?
+    **DO NOT** trust your initial implementation. Verify everything independently.
 
-    If you find issues during self-review, fix them now before reporting.
+    **If you find issues:** **FIX THEM NOW**. After fixing, review the spec again to confirm. Do NOT proceed to Stage 2 until Stage 1 passes with NO issues.
+
+    ### Stage 2: Code Quality Self-Review
+
+    After Stage 1 passes, review your code quality.
+
+    **Check for:**
+    - **Completeness:** Are all edge cases handled? Does everything work together?
+    - **Cleanliness:** Are names clear and accurate? Is the code readable? Does each file have one clear responsibility?
+    - **Discipline:** Did you avoid overbuilding (YAGNI)? Did you only build what was requested? Did you follow existing patterns in the codebase?
+    - **Testing:** Do tests actually verify behavior (not just mock behavior)? Are tests comprehensive? Did you follow TDD if required?
+    - **Project conventions:** Does the code follow the project's architecture, naming, and coding conventions?
+
+    **If you find issues:** **FIX THEM NOW**. After fixing, review again. Do NOT report done until BOTH stages pass with NO issues.
 
     ## Report Format
 
@@ -104,8 +108,10 @@ Task tool (general-purpose):
     - What you implemented (or what you attempted, if blocked)
     - What you tested and test results
     - Files changed
-    - Self-review findings (if any)
-    - Any issues or concerns
+    - **Built-in Two-Stage Review Results:**
+      - Stage 1 (Spec Compliance): PASSED or FIXED [list issues found and fixed]
+      - Stage 2 (Code Quality): PASSED or FIXED [list issues found and fixed]
+    - Any remaining issues or concerns
 
     Use DONE_WITH_CONCERNS if you completed the work but have doubts about correctness.
     Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need

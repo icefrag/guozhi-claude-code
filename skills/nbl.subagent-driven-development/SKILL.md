@@ -5,11 +5,11 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute plan by dispatching fresh subagent per task. Each implementer performs built-in two-stage self-review (spec compliance + code quality) before reporting done. After all tasks complete, perform global two-stage review on all merged code.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Fresh subagent per task with built-in two-stage self-review + global review after all tasks = high quality, fast iteration
 
 ## When to Use
 
@@ -34,7 +34,8 @@ digraph when_to_use {
 **vs. Executing Plans (parallel session):**
 - Same session (no context switch)
 - Fresh subagent per task (no context pollution)
-- Two-stage review after each task: spec compliance first, then code quality
+- Built-in two-stage self-review per task (spec compliance + code quality)
+- Final global two-stage review on all merged code
 - Faster iteration (no human-in-loop between tasks)
 
 ## NON-NEGOTIABLE GATES
@@ -53,6 +54,13 @@ Before any task execution, these gates MUST pass:
 - Subagents receive explicit TDD instructions in their prompt
 - No "implement first, test later" allowed
 
+**GATE 3: Built-In Two-Stage Self-Review**
+- Each implementer MUST perform two-stage self-review before reporting DONE:
+  1. Spec compliance check - fix any issues found
+  2. Code quality check - fix any issues found
+- Only report DONE after both stages pass with no issues
+- This is NON-NEGOTIABLE - do not accept DONE without self-review results
+
 **These gates are NON-NEGOTIABLE.** Skip them only if user explicitly overrides.
 
 ## The Process
@@ -61,21 +69,6 @@ Before any task execution, these gates MUST pass:
 digraph process {
     rankdir=TB;
 
-    subgraph cluster_per_task {
-        label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
-        "Implementer subagent asks questions?" [shape=diamond];
-        "Answer questions, provide context" [shape=box];
-        "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
-        "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
-        "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
-        "Implementer subagent fixes spec gaps" [shape=box];
-        "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
-        "Code quality reviewer subagent approves?" [shape=diamond];
-        "Implementer subagent fixes quality issues" [shape=box];
-        "Mark task complete (TodoWrite + Plan file)" [shape=box];
-    }
-
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "GATE 1: In git worktree?" [shape=diamond style=filled fillcolor=yellow];
     "On main/master branch?" [shape=diamond style=filled fillcolor=yellow];
@@ -83,7 +76,17 @@ digraph process {
     "Invoke nbl.using-git-worktrees" [shape=box];
     "GATE 2: TDD mode enabled?" [shape=diamond style=filled fillcolor=yellow];
     "More tasks remain?" [shape=diamond];
-    "Dispatch final code reviewer subagent for entire implementation" [shape=box];
+    "Dispatch implementer subagent (with built-in two-stage review)" [shape=box];
+    "Implementer asks questions?" [shape=diamond];
+    "Answer questions, provide context" [shape=box];
+    "Implementer: implement → spec self-check → fix → quality self-check → fix → DONE" [shape=box];
+    "Mark task complete (TodoWrite + Plan file)" [shape=box];
+    "Global Stage 1: Spec review (all merged changes)" [shape=box];
+    "Spec review passes?" [shape=diamond];
+    "Dispatch fix agent for spec issues" [shape=box];
+    "Global Stage 2: Code quality review (all merged changes)" [shape=box];
+    "Quality review passes?" [shape=diamond];
+    "Dispatch fix agent for quality issues" [shape=box];
     "Use nbl.finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "GATE 1: In git worktree?";
@@ -93,24 +96,23 @@ digraph process {
     "On main/master branch?" -> "Auto-create dev branch from plan name" -> "Invoke nbl.using-git-worktrees" [label="yes (on main)"];
     "Invoke nbl.using-git-worktrees" -> "GATE 1: In git worktree?";
     "GATE 1: In git worktree?" -> "GATE 2: TDD mode enabled?" [label="yes"];
-    "GATE 2: TDD mode enabled?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
-    "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
-    "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
-    "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
-    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
-    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
-    "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
-    "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete (TodoWrite + Plan file)" [label="yes"];
+    "GATE 2: TDD mode enabled?" -> "More tasks remain?" [label="yes"];
+    "More tasks remain?" -> "Dispatch implementer subagent (with built-in two-stage review)" [label="yes"];
+    "Dispatch implementer subagent (with built-in two-stage review)" -> "Implementer asks questions?";
+    "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
+    "Answer questions, provide context" -> "Dispatch implementer subagent (with built-in two-stage review)";
+    "Implementer asks questions?" -> "Implementer: implement → spec self-check → fix → quality self-check → fix → DONE" [label="no"];
+    "Implementer: implement → spec self-check → fix → quality self-check → fix → DONE" -> "Mark task complete (TodoWrite + Plan file)";
     "Mark task complete (TodoWrite + Plan file)" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use nbl.finishing-a-development-branch";
+    "More tasks remain?" -> "Global Stage 1: Spec review (all merged changes)" [label="no"];
+    "Global Stage 1: Spec review (all merged changes)" -> "Spec review passes?";
+    "Spec review passes?" -> "Dispatch fix agent for spec issues" [label="no"];
+    "Dispatch fix agent for spec issues" -> "Global Stage 1: Spec review (all merged changes)";
+    "Spec review passes?" -> "Global Stage 2: Code quality review (all merged changes)" [label="yes"];
+    "Global Stage 2: Code quality review (all merged changes)" -> "Quality review passes?";
+    "Quality review passes?" -> "Dispatch fix agent for quality issues" [label="no"];
+    "Dispatch fix agent for quality issues" -> "Global Stage 1: Spec review (all merged changes)";
+    "Quality review passes?" -> "Use nbl.finishing-a-development-branch" [label="yes"];
 }
 ```
 
@@ -133,9 +135,9 @@ Use the least powerful model that can handle each role to conserve cost and incr
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Proceed to spec compliance review.
+**DONE:** Implementer completed the work **and** passed built-in two-stage self-review with all issues fixed. Mark task complete and proceed to next task.
 
-**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
+**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before moving on. If they're observations (e.g., "this file is getting large"), note them and mark task complete.
 
 **NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
 
@@ -175,17 +177,12 @@ Implementer: "Got it. Implementing now..."
 [Later] Implementer:
   - Implemented install-hook command
   - Added tests, 5/5 passing
-  - Self-review: Found I missed --force flag, added it
+  - **Built-in Two-Stage Review Results:**
+    - Stage 1 (Spec Compliance): PASSED
+    - Stage 2 (Code Quality): PASSED
   - Committed
 
-[Dispatch spec compliance reviewer]
-Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
-
-[Get git SHAs, dispatch code quality reviewer]
-Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
-
-[Mark "开发完成" and "Spec compliance" and "Code quality" complete in plan file status area]
-[Mark Task 1 complete in TodoWrite]
+[Mark Task 1 complete in TodoWrite, mark all statuses complete in plan file]
 
 Task 2: Recovery modes
 
@@ -196,37 +193,24 @@ Implementer: [No questions, proceeds]
 Implementer:
   - Added verify/repair modes
   - 8/8 tests passing
-  - Self-review: All good
+  - **Built-in Two-Stage Review Results:**
+    - Stage 1 (Spec Compliance): FIXED - Missing progress reporting, extra --json flag
+    - Stage 2 (Code Quality): FIXED - Extracted magic number 100 to PROGRESS_INTERVAL constant
   - Committed
 
-[Dispatch spec compliance reviewer]
-Spec reviewer: ❌ Issues:
-  - Missing: Progress reporting (spec says "report every 100 items")
-  - Extra: Added --json flag (not requested)
-
-[Implementer fixes issues]
-Implementer: Removed --json flag, added progress reporting
-
-[Spec reviewer reviews again]
-Spec reviewer: ✅ Spec compliant now
-
-[Dispatch code quality reviewer]
-Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
-
-[Implementer fixes]
-Implementer: Extracted PROGRESS_INTERVAL constant
-
-[Code reviewer reviews again]
-Code reviewer: ✅ Approved
-
-[Mark "开发完成" and "Spec compliance" and "Code quality" complete in plan file status area]
-[Mark Task 2 complete in TodoWrite]
+[Mark Task 2 complete in TodoWrite, mark all statuses complete in plan file]
 
 ...
 
-[After all tasks]
-[Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready to merge
+[After all tasks complete]
+[Get BASE_SHA and HEAD_SHA]
+[Dispatch global spec reviewer on all changes]
+Spec reviewer: ✅ All changes spec compliant
+
+[Dispatch global code quality reviewer on all changes]
+Code reviewer: ✅ All changes meet quality standards
+
+[Invoke nbl.finishing-a-development-branch]
 
 Done!
 ```
@@ -251,51 +235,42 @@ Done!
 - Questions surfaced before work begins (not after)
 
 **Quality gates:**
-- Self-review catches issues before handoff
-- Two-stage review: spec compliance, then code quality
-- Review loops ensure fixes actually work
-- Spec compliance prevents over/under-building
-- Code quality ensures implementation is well-built
+- Implementer finds and fixes issues before returning to main agent
+- Two-stage review still happens (just inside the implementer)
+- Final global review ensures quality across all changes
+- Same quality guarantees with fewer coordination steps
 
-**Cost:**
-- More subagent invocations (implementer + 2 reviewers per task)
-- Controller does more prep work (extracting all tasks upfront)
-- Review loops add iterations
-- But catches issues early (cheaper than debugging later)
+**Efficiency:**
+- One subagent invocation per task (with built-in two-stage review)
+- Fewer round-trips between main agent and subagents
+- Faster overall execution because implementer fixes issues before returning
+- Catches issues early (cheaper than debugging later)
 
 ## Red Flags
 
 **Never (NON-NEGOTIABLE):**
 - **Start implementation without git worktree** - MUST invoke nbl.using-git-worktrees first
 - **Skip TDD** - "implement first, test later" is forbidden
+- **Accept DONE before built-in two-stage review completes** - MUST verify implementer performed both stages
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
-- Skip reviews (spec compliance OR code quality)
-- Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
-- Accept "close enough" on spec compliance (spec reviewer found issues = not done)
-- Skip review loops (reviewer found issues = implementer fixes = review again)
-- Let implementer self-review replace actual review (both are needed)
-- **Start code quality review before spec compliance is ✅** (wrong order)
-- Move to next task while either review has open issues
+- Move to next task with unfixed issues from self-review
+- Skip the final global two-stage review after all tasks complete
 
 **If subagent asks questions:**
 - Answer clearly and completely
 - Provide additional context if needed
 - Don't rush them into implementation
 
-**If reviewer finds issues:**
-- Implementer (same subagent) fixes them
-- Reviewer reviews again
-- Repeat until approved
-- Don't skip the re-review
-
-**If subagent fails task:**
+**If global reviewer finds issues after all tasks complete:**
 - Dispatch fix subagent with specific instructions
+- Fix issues found by reviewers
+- Re-review after fixes
 - Don't try to fix manually (context pollution)
 
 ## Integration
@@ -306,8 +281,13 @@ Done!
 
 **Supporting skills:**
 - **nbl.writing-plans** - Creates the plan this skill executes
-- **nbl.requesting-code-review** - Code review template for reviewer subagents
+- **nbl.requesting-code-review** - Code review template for final global review
 - **nbl.finishing-a-development-branch** - Complete development after all tasks
 
+**Prompt templates:**
+- `./implementer-prompt.md` - Implementer with built-in two-stage self-review
+- `./spec-reviewer-prompt.md` - For final global spec compliance review
+- `./code-quality-reviewer-prompt.md` - For final global code quality review
+
 **Alternative workflow:**
-- **nbl.executing-plans** - Use for parallel session instead of same-session execution
+- **nbl.parallel-subagent-driven-development** - Use for parallel execution with same flow
