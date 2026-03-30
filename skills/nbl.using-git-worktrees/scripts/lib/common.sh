@@ -84,16 +84,24 @@ ensure_git_repo() {
 ensure_gitignore() {
     local changed=false
 
-    if ! git check-ignore -q .worktrees 2>/dev/null; then
-        echo "ℹ️  .worktrees/ 未被 gitignore，正在添加..."
-        echo ".worktrees/" >> .gitignore
-        changed=true
-    fi
-
-    if ! git check-ignore -q docs/ 2>/dev/null; then
-        echo "ℹ️  docs/ 未被 gitignore，正在添加..."
+    # 如果 .gitignore 不存在，创建它
+    if [ ! -f ".gitignore" ]; then
+        echo ".worktrees/" > .gitignore
         echo "docs/" >> .gitignore
         changed=true
+    else
+        # 检查 .worktrees/ 是否已经存在（精确整行匹配）
+        if ! grep -qxF ".worktrees/" .gitignore; then
+            echo "ℹ️  .worktrees/ 未被 gitignore，正在添加..."
+            echo ".worktrees/" >> .gitignore
+            changed=true
+        fi
+        # 检查 docs/ 是否已经存在（精确整行匹配）
+        if ! grep -qxF "docs/" .gitignore; then
+            echo "ℹ️  docs/ 未被 gitignore，正在添加..."
+            echo "docs/" >> .gitignore
+            changed=true
+        fi
     fi
 
     if [ "$changed" = true ]; then
