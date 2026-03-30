@@ -177,8 +177,8 @@ Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
 [Get git SHAs, dispatch code quality reviewer]
 Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
 
+[Mark "开发完成" and "Spec compliance" and "Code quality" complete in plan file status area]
 [Mark Task 1 complete in TodoWrite]
-[Update plan file: change Task 1 from -[ ] to -[X]]
 
 Task 2: Recovery modes
 
@@ -212,8 +212,8 @@ Implementer: Extracted PROGRESS_INTERVAL constant
 [Code reviewer reviews again]
 Code reviewer: ✅ Approved
 
+[Mark "开发完成" and "Spec compliance" and "Code quality" complete in plan file status area]
 [Mark Task 2 complete in TodoWrite]
-[Update plan file: change Task 2 from -[ ] to -[X]]
 
 ...
 
