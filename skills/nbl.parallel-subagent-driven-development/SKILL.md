@@ -131,7 +131,7 @@ For each level:
 | 3 | Code quality review | ✅ |
 | 4 | Rebase to base | ✅ |
 | 5 | Merge to base | ✅ |
-| 6 | Mark task complete in plan file (change `-[ ]` to `-[X]`) | ✅ |
+| 6 | Mark all three task statuses complete in plan file status area | ✅ |
 
 **Key rule:** Level completion = ALL tasks passed ALL steps.
 
