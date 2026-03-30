@@ -19,12 +19,14 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 ┌─────────────────────────────────────────────────────────────────┐
 │  BEFORE reading plan, BEFORE creating tasks, BEFORE anything:   │
 │                                                                 │
-│  1. Are you on main/master branch? → MUST call worktree skill   │
-│  2. Already in a worktree? → Skip to "Read Plan" section        │
+│  1. On main/master branch → AUTO-create feature/bugfix branch  │
+│  2. Each task creates its own isolated worktree when dispatched │
 │                                                                 │
-│  NEVER dispatch implementer on main/master without worktree     │
+│  No top-level worktree needed before starting                   │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+**Key difference from serial mode:** Parallel mode creates a separate worktree for **each task** individually. No need to create a top-level worktree before starting. If starting from main/master, a development branch is auto-created based on the plan name.
 
 ## NON-NEGOTIABLE Requirements (Read BEFORE Starting)
 
@@ -283,18 +285,11 @@ If the conflict is too complex for automatic resolution:
 digraph process {
     rankdir=TB;
 
-    subgraph cluster_pre_execution {
-        label="Pre-Execution Gate (MANDATORY)";
-        style=filled fillcolor=lightcoral];
-        "⛔ GATE 1: Run git worktree list" [shape=box style=filled fillcolor=yellow];
-        "Current dir in worktree?" [shape=diamond style=filled fillcolor=yellow];
-        "Invoke nbl.using-git-worktrees" [shape=box style=filled fillcolor=lightpink];
-        "cd to worktree directory" [shape=box];
-    }
-
     subgraph cluster_setup {
         label="Setup Phase";
         style=filled fillcolor=lightyellow;
+        "⛔ GATE 1: Check current branch" [shape=box style=filled fillcolor=yellow];
+        "On main/master?" [shape=diamond style=filled fillcolor=yellow];
         "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
         "Analyze dependencies → Build levels" [shape=box];
     }
@@ -307,11 +302,10 @@ digraph process {
     }
 
     // Pre-execution flow
-    "⛔ GATE 1: Run git worktree list" -> "Current dir in worktree?";
-    "Current dir in worktree?" -> "cd to worktree directory" [label="yes"];
-    "Current dir in worktree?" -> "Invoke nbl.using-git-worktrees" [label="no"];
-    "Invoke nbl.using-git-worktrees" -> "⛔ GATE 1: Run git worktree list" [label="verify"];
-    "cd to worktree directory" -> "Read plan, extract all tasks with full text, note context, create TodoWrite";
+    "⛔ GATE 1: Check current branch" -> "On main/master?";
+    "On main/master?" -> "Read plan, extract all tasks with full text, note context, create TodoWrite" [label="no - ok, each task creates its own worktree"];
+    "On main/master?" -> "Auto-create dev branch from plan name" [label="yes"];
+    "Auto-create dev branch from plan name" -> "Checkout new branch (feature/bugfix)" -> "Read plan, extract all tasks...";
 
     subgraph cluster_pipeline {
         label="Pipeline Processing";
@@ -378,10 +372,12 @@ digraph process {
 
 | Gate | Location | Requirement |
 |------|----------|-------------|
-| **GATE 1: Worktree** | BEFORE reading plan | MUST verify current dir is in worktree (run `git worktree list`) |
+| **GATE 1: Branch Check** | BEFORE reading plan | If on main/master → **auto-create development branch** (feature/bugfix based on plan name). All tasks merge back to this dev branch. |
 | **GATE 2: TDD** | Implementer phase | MUST invoke `nbl.test-driven-development` skill |
 | **GATE 3: Spec Review** | After implementer | MUST invoke `nbl.requesting-code-review` with spec-reviewer template |
 | **GATE 4: Quality Review** | After spec review | MUST invoke `nbl.requesting-code-review` with code-quality template |
+
+**Note:** Each task creates its own isolated worktree when dispatched. No top-level worktree is created at startup. After all tasks complete, everything is merged to the development branch (auto-created if starting from main). User manually merges dev branch to main when ready.
 
 ## Model Selection
 
@@ -459,7 +455,8 @@ Prompt templates are shared with serial subagent-driven-development:
 ## Red Flags
 
 **Never:**
-- Dispatch an implementer without worktree isolation (MUST call `nbl.using-git-worktrees` first, always required regardless of current branch)
+- Execute on main/master branch without explicit user consent
+- Dispatch an implementer without worktree isolation (each task MUST have its own worktree, created via `nbl.using-git-worktrees` with taskId when dispatching)
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
 - Make subagent read plan file (provide full text instead)

@@ -43,7 +43,9 @@ Before any task execution, these gates MUST pass:
 
 **GATE 1: Git Worktree Isolation**
 - MUST run in a git worktree (never main/master branch)
-- If not in worktree: invoke `nbl.using-git-worktrees` first
+- If not in worktree:
+  - On main/master → **auto-create development branch** (feature/bugfix based on plan name), then create worktree
+  - On feature/bugfix dev branch → invoke `nbl.using-git-worktrees` to create isolated worktree
 - No exceptions
 
 **GATE 2: Test-Driven Development**
@@ -76,6 +78,8 @@ digraph process {
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "GATE 1: In git worktree?" [shape=diamond style=filled fillcolor=yellow];
+    "On main/master branch?" [shape=diamond style=filled fillcolor=yellow];
+    "Auto-create dev branch from plan name" [shape=box];
     "Invoke nbl.using-git-worktrees" [shape=box];
     "GATE 2: TDD mode enabled?" [shape=diamond style=filled fillcolor=yellow];
     "More tasks remain?" [shape=diamond];
@@ -83,7 +87,10 @@ digraph process {
     "Use nbl.finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "GATE 1: In git worktree?";
-    "GATE 1: In git worktree?" -> "Invoke nbl.using-git-worktrees" [label="no"];
+    "GATE 1: In git worktree?" -> "GATE 2: TDD mode enabled?" [label="yes"];
+    "GATE 1: In git worktree?" -> "On main/master branch?" [label="no"];
+    "On main/master branch?" -> "Invoke nbl.using-git-worktrees" [label="no (on dev branch)"];
+    "On main/master branch?" -> "Auto-create dev branch from plan name" -> "Invoke nbl.using-git-worktrees" [label="yes (on main)"];
     "Invoke nbl.using-git-worktrees" -> "GATE 1: In git worktree?";
     "GATE 1: In git worktree?" -> "GATE 2: TDD mode enabled?" [label="yes"];
     "GATE 2: TDD mode enabled?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
