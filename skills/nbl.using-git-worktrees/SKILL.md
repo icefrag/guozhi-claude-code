@@ -9,7 +9,7 @@ description: Use when starting feature work that needs isolation from current wo
 
 Git worktrees create isolated workspaces sharing the same repository, allowing work on multiple branches simultaneously without switching.
 
-**Core principle:** Systematic directory selection + safety verification = reliable isolation.
+**Core principle:** Scripts handle all worktree operations reliably.
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
@@ -28,266 +28,58 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 | Single | `feature/{name}` | `.worktrees/{name}` |
 | Parallel | `feature/{name}-task{id}` | `.worktrees/{name}-task{id}` |
 
-### Examples
+## Usage
 
-```
-Plan file: docs/nbl/plans/2026-03-27-user-authentication.md
-  → Base name: user-authentication
-  → Single worktree:  .worktrees/user-authentication
-  → Parallel task 1:  .worktrees/user-authentication-task1
-  → Parallel task 3:  .worktrees/user-authentication-task3
-```
-
-## Directory Selection Process
-
-Always use `.worktrees/` (project-local, hidden). This is the preferred convention.
-
-### 1. Check Existing Directory
+### Single Worktree (Sequential Mode)
 
 ```bash
-# Check if .worktrees exists
-ls -d .worktrees 2>/dev/null
-```
-
-**If found:** Use that directory.
-
-**If NOT found:** Create `.worktrees/` directory.
-
-## Safety Verification
-
-### For Project-Local Directories (.worktrees or worktrees)
-
-**MUST verify directory is ignored before creating worktree:**
-
-```bash
-# Check if directory is ignored (respects local, global, and system gitignore)
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
-```
-
-**If NOT ignored:**
-
-Per Jesse's rule "Fix broken things immediately":
-1. Add appropriate line to .gitignore
-2. Commit the change
-3. Proceed with worktree creation
-
-**Why critical:** Prevents accidentally committing worktree contents to repository.
-
-### For Global Directory (~/.config/nbl/worktrees)
-
-No .gitignore verification needed - outside project entirely.
-
-## Creation Steps
-
-### 1. Determine Branch Name
-
-```
-# Priority: explicit param > plan file > description
-
-IF caller provides branch_name:
-    base_name = branch_name
-ELSE IF plan file exists (docs/nbl/plans/*.md):
-    base_name = extract name from filename (YYYY-MM-DD-{name}.md)
-ELSE:
-    base_name = kebab-case(feature description)
-```
-
-### 2. Create Worktree (Single Mode)
-
-```bash
-# Single worktree for sequential execution
-branch_name="feature/${base_name}"
-worktree_path=".worktrees/${base_name}"
-
-if ! git worktree add "$worktree_path" -b "$branch_name" 2>/dev/null; then
-    # Creation failed, attempt smart recovery
-    if [ -d "$worktree_path" ]; then
-        # Case 1: worktree directory already exists → reuse it
-        echo "Worktree already exists at $worktree_path, reusing."
-    elif git show-ref --verify --quiet "refs/heads/$branch_name"; then
-        # Case 2: branch exists but worktree doesn't → re-attach with existing branch
-        echo "Branch $branch_name exists, re-attaching worktree."
-        if ! git worktree add "$worktree_path" "$branch_name"; then
-            echo "ERROR: Failed to re-attach existing worktree."
-            exit 1
-        fi
-    else
-        # Case 3: other causes (disk full, permissions) → exit with error
-        echo "ERROR: Failed to create worktree. Please check disk space and permissions."
-        exit 1
-    fi
+# Detect platform and run appropriate script
+if [[ "$OSTYPE" == "win32" ]] || [[ -n "${PSModulePath:-}" ]]; then
+    # PowerShell (Windows native)
+    ./scripts/create-worktree.ps1 <base_name>
+else
+    # Bash (Linux/macOS/Git-Bash)
+    ./scripts/create-worktree.sh <base_name>
 fi
-cd "$worktree_path"
 ```
 
-### 3. Run Project Setup
-
-Auto-detect and run appropriate setup:
+### Parallel Worktree (Parallel Mode)
 
 ```bash
-# Node.js
-if [ -f package.json ]; then npm install; fi
-
-# Rust
-if [ -f Cargo.toml ]; then cargo build; fi
-
-# Python
-if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-if [ -f pyproject.toml ]; then poetry install; fi
-
-# Go
-if [ -f go.mod ]; then go mod download; fi
-
-# Java (Maven)
-if [ -f pom.xml ]; then mvn dependency:go-offline -B; fi
-
-# Java (Gradle)
-if [ -f build.gradle ] || [ -f build.gradle.kts ]; then gradle dependencies; fi
-```
-
-### 4. Verify Clean Baseline
-
-Run tests to ensure worktree starts clean:
-
-```bash
-# Examples - use project-appropriate command
-npm test
-cargo test
-pytest
-go test ./...
-mvn test
-gradle test
-```
-
-**If tests fail:** Report failures, ask whether to proceed or investigate.
-
-**If tests pass:** Report ready.
-
-### 5. Report Location
-
-```
-Worktree ready at <full-path>
-Tests passing (<N> tests, 0 failures)
-Ready to implement <feature-name>
-```
-
-## Batch Operations (Parallel Mode)
-
-When executing parallel tasks, create and manage multiple worktrees.
-
-### Create Multiple Worktrees
-
-```bash
-# For parallel tasks in a level
-# base_name determined from plan file or description
-
-for task_id in 1 3 5; do
-    branch_name="feature/${base_name}-task${task_id}"
-    worktree_path=".worktrees/${base_name}-task${task_id}"
-
-    if ! git worktree add "$worktree_path" -b "$branch_name" 2>/dev/null; then
-        # Creation failed, attempt smart recovery
-        if [ -d "$worktree_path" ]; then
-            echo "Worktree for task $task_id already exists, reusing."
-        elif git show-ref --verify --quiet "refs/heads/$branch_name"; then
-            echo "Branch $branch_name exists, re-attaching worktree for task $task_id."
-            if ! git worktree add "$worktree_path" "$branch_name"; then
-                echo "ERROR: Failed to re-attach worktree for task $task_id."
-                exit 1
-            fi
-        else
-            echo "ERROR: Failed to create worktree for task $task_id."
-            exit 1
-        fi
-    fi
+# Create multiple worktrees for parallel tasks
+for task_id in 1 2 3; do
+    ./scripts/create-worktree.sh <base_name> $task_id
 done
 ```
 
-### Cleanup Worktree After Merge
+## Cleanup
 
-After a task is merged to base branch (note: for parallel mode, cleanup happens in finishing-a-development-branch):
+### Single Worktree
 
 ```bash
-# Remove worktree
-git worktree remove --force ".worktrees/${base_name}-task${task_id}"
-# Delete branch
-git branch -d "feature/${base_name}-task${task_id}"
+# Check for unmerged commits first
+./scripts/cleanup-worktree.sh <base_name>
+
+# Force delete if needed
+./scripts/cleanup-worktree.sh <base_name> --force
 ```
 
-### Directory Structure Example
+### Parallel Worktrees
 
-```
-.worktrees/
-├── user-authentication-task1/      # Task 1 worktree
-├── user-authentication-task3/      # Task 3 worktree
-├── user-authentication-task4/      # Task 4 worktree
-└── user-authentication/            # Single mode (optional)
-```
-
-### Parallel Mode Integration
-
-- **subagent-driven-development (parallel mode)** - Creates batch worktrees for parallel tasks
-- Maximum 5 parallel worktrees at a time
-- Each worktree is cleaned up after its task is merged
-
-## Quick Reference
-
-| Situation | Action |
-|-----------|--------|
-| `.worktrees/` exists | Use it (verify ignored) |
-| `.worktrees/` does not exist | Create `.worktrees/` directory |
-| Directory not ignored | Add to .gitignore + commit |
-| Tests fail during baseline | Report failures + ask |
-| No package.json/Cargo.toml | Skip dependency install |
-
-## Common Mistakes
-
-### Skipping ignore verification
-
-- **Problem:** Worktree contents get tracked, pollute git status
-- **Fix:** Always use `git check-ignore` before creating project-local worktree
-
-### Proceeding with failing tests
-
-- **Problem:** Can't distinguish new bugs from pre-existing issues
-- **Fix:** Report failures, get explicit permission to proceed
-
-### Hardcoding setup commands
-
-- **Problem:** Breaks on projects using different tools
-- **Fix:** Auto-detect from project files (package.json, etc.)
-
-## Example Workflow
-
-```
-You: I'm using the using-git-worktrees skill to set up an isolated workspace.
-
-[Plan file: docs/nbl/plans/2026-03-27-user-auth.md]
-[Extract base_name: user-auth]
-[Check .worktrees/ - exists]
-[Verify ignored - git check-ignore confirms .worktrees/ is ignored]
-[Create worktree: git worktree add .worktrees/user-auth -b feature/user-auth]
-[Run npm install]
-[Run npm test - 47 passing]
-
-Worktree ready at /Users/jesse/myproject/.worktrees/user-auth
-Branch: feature/user-auth
-Tests passing (47 tests, 0 failures)
-Ready to implement user-auth feature
+```bash
+# Cleanup each task's worktree
+for task_id in 1 2 3; do
+    ./scripts/cleanup-worktree.sh <base_name> $task_id [--force]
+done
 ```
 
-## Red Flags
+## Script Reference
 
-**Never:**
-- Create worktree without verifying it's ignored (project-local)
-- Skip baseline test verification
-- Proceed with failing tests without asking
-
-**Always:**
-- Use `.worktrees/` directory
-- Verify directory is ignored for project-local
-- Auto-detect and run project setup
-- Verify clean test baseline
+| Script | Purpose | Key Features |
+|--------|---------|--------------|
+| `scripts/create-worktree.sh/ps1` | Create/reuse worktree | Auto git init, gitignore check, smart recovery |
+| `scripts/cleanup-worktree.sh/ps1` | Remove worktree | Unmerged commit check, --force option |
+| `scripts/lib/common.sh/ps1` | Shared utilities | JSON output, naming helpers |
 
 ## Integration
 
