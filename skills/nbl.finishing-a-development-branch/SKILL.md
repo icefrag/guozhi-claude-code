@@ -9,9 +9,11 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Merge worktree to dev branch (if parallel mode) → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
+
+**NON-NEGOTIABLE:** All worktree operations MUST use scripts from `nbl.using-git-worktrees` skill. Never use raw `git worktree` commands directly.
 
 ## The Process
 
@@ -37,7 +39,49 @@ Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
-### Step 2: Determine Base Branch
+### Step 2: Determine Execution Mode
+
+Check which mode produced this branch:
+
+```bash
+# Check if a merge worktree exists (parallel mode indicator)
+ls .worktrees/*-merge 2>/dev/null
+```
+
+| Mode | Detection | Worktree Layout |
+|------|-----------|-----------------|
+| **Inline** | No worktree, on dev branch directly | Working on dev branch itself |
+| **Serial** | Single worktree from dev branch | `.worktrees/{name}/` |
+| **Parallel** | Merge worktree exists | `.worktrees/{name}-merge/` + (task worktrees already cleaned) |
+
+**If parallel mode detected:** Execute Step 2A first.
+
+### Step 2A: Merge Worktree → Dev Branch (Parallel Mode Only)
+
+**This step MUST execute before presenting options when parallel mode is detected.**
+
+The merge worktree contains all accumulated changes from all parallel tasks. Merge it back to the development branch:
+
+```bash
+# Determine names from merge worktree
+# merge worktree branch pattern: feature/{name}-merge
+MERGE_BRANCH=$(git branch --show-current)  # or infer from worktree list
+
+# Switch to development branch (in main workspace, not in worktree)
+git checkout <development-branch>
+
+# Merge the merge branch
+git merge --ff-only feature/<name>-merge
+
+# Verify tests on merged result
+<test command>
+```
+
+**If tests fail:** Stop and fix before proceeding.
+
+**If tests pass:** Development branch now contains all changes. Continue to Step 3.
+
+### Step 3: Determine Base Branch
 
 ```bash
 # Try common base branches
@@ -46,7 +90,7 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 Or ask: "This branch split from main - is that correct?"
 
-### Step 3: Present Options
+### Step 4: Present Options
 
 Present exactly these 4 options:
 
@@ -63,7 +107,7 @@ Which option?
 
 **Don't add explanation** - keep options concise.
 
-### Step 4: Execute Choice
+### Step 5: Execute Choice
 
 #### Option 1: Merge Locally
 
@@ -84,7 +128,7 @@ git merge <feature-branch>
 git branch -d <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
 #### Option 2: Push and Create PR
 
@@ -103,7 +147,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
 #### Option 3: Keep As-Is
 
@@ -131,32 +175,56 @@ git checkout <base-branch>
 git branch -D <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
-### Step 5: Cleanup Worktree
+### Step 6: Cleanup Worktree
+
+**NON-NEGOTIABLE: All cleanup MUST be performed via `nbl.using-git-worktrees` skill.** The skill provides proper safety checks and handles platform detection.
 
 **For Options 1, 2, 4:**
 
-Check if in worktree:
-```bash
-git worktree list | grep $(git branch --show-current)
+Invoke `nbl.using-git-worktrees` cleanup:
+
+```
+Invoke the skill with: /nbl.superpowers:nbl.using-git-worktrees cleanup <base_name> [--force]
 ```
 
-If yes:
-```bash
-git worktree remove <worktree-path>
+**Parallel mode additional cleanup:**
+
+After cleaning up the main worktree, also clean up the merge worktree:
+
+```
+Invoke the skill with: /nbl.superpowers:nbl.using-git-worktrees cleanup <name>-merge --force
 ```
 
 **For Option 3:** Keep worktree.
 
 ## Quick Reference
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch |
-|--------|-------|------|---------------|----------------|
-| 1. Merge locally | ✓ | - | - | ✓ |
-| 2. Create PR | - | ✓ | ✓ | - |
-| 3. Keep as-is | - | - | ✓ | - |
-| 4. Discard | - | - | - | ✓ (force) |
+| Option | Merge | Push | Keep Worktree | Cleanup Branch | Cleanup Merge WT |
+|--------|-------|------|---------------|----------------|------------------|
+| 1. Merge locally | ✓ | - | - | ✓ | ✓ (parallel only) |
+| 2. Create PR | - | ✓ | - | - | ✓ (parallel only) |
+| 3. Keep as-is | - | - | ✓ | - | - |
+| 4. Discard | - | - | - | ✓ (force) | ✓ (parallel only) |
+
+## Mode-Specific Behavior
+
+### Inline Mode (executing-plans)
+
+- No worktree cleanup needed (working directly on dev branch)
+- Just present options for the dev branch
+
+### Serial Mode (subagent-driven-development)
+
+- One worktree to clean up: `.worktrees/{name}/`
+- Use `cleanup-worktree` script with base_name
+
+### Parallel Mode (parallel-subagent-driven-development)
+
+- Merge worktree: `.worktrees/{name}-merge/` — merged to dev branch in Step 2A
+- Task worktrees already cleaned up during execution (by `sub-to-sub-merge` script)
+- After Step 2A: clean up merge worktree using `cleanup-worktree` script
 
 ## Common Mistakes
 
@@ -168,9 +236,13 @@ git worktree remove <worktree-path>
 - **Problem:** "What should I do next?" → ambiguous
 - **Fix:** Present exactly 4 structured options
 
-**Automatic worktree cleanup**
-- **Problem:** Remove worktree when might need it (Option 2, 3)
-- **Fix:** Only cleanup for Options 1 and 4
+**Using raw git commands for worktree cleanup**
+- **Problem:** Bypasses safety checks (unmerged commit detection, branch validation)
+- **Fix:** Always invoke `nbl.using-git-worktrees` skill for cleanup
+
+**Forgetting merge worktree in parallel mode**
+- **Problem:** Merge worktree left dangling after parallel tasks
+- **Fix:** Step 2A merges to dev branch, Step 6 cleans up merge worktree
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work
@@ -183,12 +255,14 @@ git worktree remove <worktree-path>
 - Merge without verifying tests on result
 - Delete work without confirmation
 - Force-push without explicit request
+- Use raw `git worktree` commands — always invoke `nbl.using-git-worktrees` skill
 
 **Always:**
 - Verify tests before offering options
 - Present exactly 4 options
 - Get typed confirmation for Option 4
-- Clean up worktree for Options 1 & 4 only
+- Invoke `nbl.using-git-worktrees` skill for all worktree cleanup operations
+- Clean up merge worktree in parallel mode
 
 ## Integration
 
@@ -198,4 +272,4 @@ git worktree remove <worktree-path>
 - **nbl.parallel-subagent-driven-development** - After all tasks complete
 
 **Pairs with:**
-- **nbl.using-git-worktrees** - Cleans up worktree created by that skill
+- **nbl.using-git-worktrees** - REQUIRED for all worktree cleanup operations. Use its scripts exclusively.
