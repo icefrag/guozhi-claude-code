@@ -87,7 +87,7 @@ digraph process {
     "Global Stage 2: Code quality review (all merged changes)" [shape=box];
     "Quality review passes?" [shape=diamond];
     "Dispatch fix agent for quality issues" [shape=box];
-    "Use nbl.finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Use nbl.finishing-a-development-branch with mode=serial" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "GATE 1: In git worktree?";
     "GATE 1: In git worktree?" -> "GATE 2: TDD mode enabled?" [label="yes"];
@@ -210,7 +210,7 @@ Spec reviewer: ✅ All changes spec compliant
 [Dispatch global code quality reviewer on all changes]
 Code reviewer: ✅ All changes meet quality standards
 
-[Invoke nbl.finishing-a-development-branch]
+[Invoke nbl.finishing-a-development-branch with mode=serial]
 
 Done!
 ```
@@ -282,7 +282,7 @@ Done!
 **Supporting skills:**
 - **nbl.writing-plans** - Creates the plan this skill executes
 - **nbl.requesting-code-review** - Code review template for final global review
-- **nbl.finishing-a-development-branch** - Complete development after all tasks
+- **nbl.finishing-a-development-branch** - Complete development after all tasks with mode=serial
 
 **Prompt templates:**
 - `./implementer-prompt.md` - Implementer with built-in two-stage self-review
