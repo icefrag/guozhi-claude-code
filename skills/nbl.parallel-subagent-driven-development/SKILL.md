@@ -26,7 +26,7 @@ Execute plan by dispatching fresh subagent per task. Each implementer performs b
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Key difference from serial mode:** Parallel mode creates a separate worktree for **each task** individually. No need to create a top-level worktree before starting. If starting from main/master, a development branch is auto-created based on the plan name.
+**Key difference from previous design:** Parallel mode creates a top-level merge worktree at startup from the base development branch. All tasks in each level fork from this merge worktree and merge back to it after completion. After all tasks complete, only the merge worktree remains with all accumulated changes, and the original finishing-a-development-branch skill can be used.
 
 ## NON-NEGOTIABLE Requirements (Read BEFORE Starting)
 
@@ -36,13 +36,20 @@ Execute plan by dispatching fresh subagent per task. Each implementer performs b
 
 ### 1. Worktree Setup (MANDATORY)
 
+Before starting any levels:
 ```
-Before each level:
-├── Isolated workspace? → Call nbl.using-git-worktrees
-│   ├── Single task in level → Single worktree
-│   └── Multiple tasks in level → Batch worktrees (max 5)
-└── Verify: git worktree list shows your worktree(s)
+- If on main/master branch → AUTO-create development branch (feature/bugfix based on plan name)
+- Create ONE merge worktree from development branch
+  - Branch: `feature/{name}-merge`
+  - Path: `.worktrees/{name}-merge/`
+- All subsequent task worktrees will be created from this merge worktree
 ```
+
+**Key difference from previous design:**
+- Create ONE top-level merge worktree at startup
+- Each task in each level creates its own isolated worktree from merge worktree
+- After each task completes, it's merged back to merge worktree and the task worktree is cleaned up
+- No top-level worktree needed before starting - only the merge worktree
 
 **Never:** Dispatch implementer on main/master branch without worktree isolation
 
@@ -147,17 +154,23 @@ If any task fails at any step:
 
 This section documents the detailed flow for multi-task levels. See "The Process" diagram above for the unified view.
 
-### Pipeline Flow
+### Pipeline Flow (New Design)
 
 ```dot
 digraph pipeline_flow {
     rankdir=TB;
 
-    subgraph cluster_dispatch {
-        label="Parallel Dispatch";
+    subgraph cluster_setup {
+        label="Setup (Once at Start)";
+        style=filled fillcolor=lightyellow;
+        "Create merge worktree from base branch" [shape=box];
+    }
+
+    subgraph cluster_level {
+        label="For Each Level";
         style=filled fillcolor=lightblue;
-        "Create worktrees (max 5 per batch)" [shape=box];
-        "Dispatch N implementers (each with built-in two-stage review)" [shape=box];
+        "Create worktrees for tasks in this level (max 5)" [shape=box];
+        "Dispatch N implementers (parallel)" [shape=box];
     }
 
     subgraph cluster_process {
@@ -165,44 +178,36 @@ digraph pipeline_flow {
         style=filled fillcolor=lightyellow;
         "Wait for ANY agent to complete" [shape=diamond];
         "Implementer reports DONE (self-review passed)" [shape=box];
-        "Rebase to base" [shape=box];
-        "Merge to base" [shape=box];
-        "Cleanup worktree" [shape=box];
-    }
-
-    subgraph cluster_loop {
-        label="Completion Loop";
+        "Rebase task branch to merge branch" [shape=box];
+        "Merge task branch to merge branch (in main workspace)" [shape=box];
+        "Cleanup task worktree" [shape=box];
         "More agents pending?" [shape=diamond];
-        "Level complete" [shape=box];
     }
 
-    "Create worktrees (max 5 per batch)" -> "Dispatch N implementers (each with built-in two-stage review)";
-    "Dispatch N implementers (each with built-in two-stage review)" -> "Wait for ANY agent to complete";
+    "Create merge worktree from base branch" -> "Create worktrees for tasks in this level (max 5)";
+    "Create worktrees for tasks in this level (max 5)" -> "Dispatch N implementers (parallel)";
+    "Dispatch N implementers (parallel)" -> "Wait for ANY agent to complete";
     "Wait for ANY agent to complete" -> "Implementer reports DONE (self-review passed)";
-    "Implementer reports DONE (self-review passed)" -> "Rebase to base";
-    "Rebase to base" -> "Merge to base";
-    "Merge to base" -> "Cleanup worktree";
-    "Cleanup worktree" -> "More agents pending?";
+    "Implementer reports DONE (self-review passed)" -> "Rebase task branch to merge branch";
+    "Rebase task branch to merge branch" -> "Merge task branch to merge branch (in main workspace)";
+    "Merge task branch to merge branch (in main workspace)" -> "Cleanup task worktree";
+    "Cleanup task worktree" -> "More agents pending?";
     "More agents pending?" -> "Wait for ANY agent to complete" [label="yes"];
     "More agents pending?" -> "Level complete" [label="no"];
 }
 ```
 
-### Per-Task Rebase + Merge Process
+### Per-Task Rebase + Merge Process (in merge worktree model)
 
 For each completed agent:
 
 1. **Implementer completes:** implement → spec self-check → fix → quality self-check → fix → DONE
-2. **Rebase** (in task worktree, on task branch) - `git rebase $base_branch` (handle conflicts if any)
-   - `$base_branch` is the branch we created worktrees from (e.g., main, dev, master)
-3. **Merge** (in main workspace, on base branch) - `git checkout $base_branch && git merge --ff-only $task_branch`
-   - `$task_branch` is the branch for this task (e.g., `feature/{base_name}-task{task_id}`)
-4. **Cleanup worktree** - Remove the task worktree immediately (non-blocking)
+2. **Rebase** (in task worktree, on task branch) - `git rebase $merge_branch` (where `$merge_branch` = `feature/{name}-merge`)
+3. **Merge** (in main workspace, on merge branch) - `git checkout $merge_branch && git merge --ff-only $task_branch`
+4. **Cleanup worktree** - Remove the task worktree immediately
    ```bash
-   # Cleanup worktree using shared script - failure does not block the pipeline
-   # base_name is the directory name: {base_name}-task{task_id}
+   # Cleanup worktree using shared script
    base_name=$(basename "$worktree_path")
-   # Extract task_id from name
    task_id=$(echo "$base_name" | sed -E 's/.*-task//')
    if [[ "$OSTYPE" == "win32" ]] || [[ -n "${PSModulePath:-}" ]]; then
      ./skills/nbl.using-git-worktrees/scripts/cleanup-worktree.ps1 "$base_name" "$task_id" --force
@@ -212,11 +217,11 @@ For each completed agent:
    ```
 5. **Keep branch** - Branch deletion is handled by `finishing-a-development-branch` after all tasks complete
 
-### Error Handling
+### Failure Handling
 
 | Scenario | Action |
 |----------|--------|
-| Implementer cannot complete (BLOCKED/NEEDS_CONTEXT) | Main agent provides context or re-dispatches |
+| Implementer cannot complete (BLOCKED/NEEDS_CONTEXT) | Main agent provides context or re-dispatch |
 | Rebase conflict | Follow "Rebase Conflict Resolution" section below |
 | Merge fails | Rollback, fix, retry |
 | **Any task in level fails** | **Whole level blocked — do NOT proceed to next level** |
@@ -283,6 +288,7 @@ digraph process {
         "On main/master?" [shape=diamond style=filled fillcolor=yellow];
         "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
         "Analyze dependencies → Build levels" [shape=box];
+        "Create merge worktree from base branch" [shape=box];
     }
 
     subgraph cluster_level_loop {
@@ -294,7 +300,7 @@ digraph process {
 
     // Pre-execution flow
     "⛔ GATE 1: Check current branch" -> "On main/master?";
-    "On main/master?" -> "Read plan, extract all tasks with full text, note context, create TodoWrite" [label="no - ok, each task creates its own worktree"];
+    "On main/master?" -> "Read plan, extract all tasks with full text, note context, create TodoWrite" [label="no - ok, create merge worktree from dev branch"];
     "On main/master?" -> "Auto-create dev branch from plan name" [label="yes"];
     "Auto-create dev branch from plan name" -> "Checkout new branch (feature/bugfix)" -> "Read plan, extract all tasks...";
 
@@ -303,8 +309,8 @@ digraph process {
         style=filled fillcolor=lightblue;
         "Wait for ANY completion" [shape=diamond];
         "Implementer reports DONE (built-in self-review passed)" [shape=box];
-        "Rebase to base" [shape=box];
-        "Merge to base" [shape=box];
+        "Rebase to merge" [shape=box];
+        "Merge to merge" [shape=box];
         "Cleanup worktree" [shape=box];
         "More agents pending?" [shape=diamond];
         "Level complete" [shape=box];
@@ -326,15 +332,16 @@ digraph process {
 
     // Setup flow
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Analyze dependencies → Build levels";
-    "Analyze dependencies → Build levels" -> "Create worktrees for tasks in this level (max 5)";
+    "Analyze dependencies → Build levels" -> "Create merge worktree from base branch";
+    "Create merge worktree from base branch" -> "Create worktrees for tasks in this level (max 5)";
     "Create worktrees for tasks in this level (max 5)" -> "Dispatch N implementers (each with built-in two-stage review)";
 
     // Pipeline processing
     "Dispatch N implementers (each with built-in two-stage review)" -> "Wait for ANY completion";
     "Wait for ANY completion" -> "Implementer reports DONE (built-in self-review passed)";
-    "Implementer reports DONE (built-in self-review passed)" -> "Rebase to base";
-    "Rebase to base" -> "Merge to base";
-    "Merge to base" -> "Cleanup worktree";
+    "Implementer reports DONE (built-in self-review passed)" -> "Rebase to merge";
+    "Rebase to merge" -> "Merge to merge";
+    "Merge to merge" -> "Cleanup worktree";
     "Cleanup worktree" -> "More agents pending?";
     "More agents pending?" -> "Wait for ANY completion" [label="yes - continue"];
     "More agents pending?" -> "Level complete" [label="no"];
@@ -362,13 +369,13 @@ digraph process {
 
 | Gate | Location | Requirement |
 |------|----------|-------------|
-| **GATE 1: Branch Check** | BEFORE reading plan | If on main/master → **auto-create development branch** (feature/bugfix based on plan name). All tasks merge back to this dev branch. |
+| **GATE 1: Branch Check + Merge Worktree** | BEFORE starting levels | If on main/master → **auto-create development branch** (feature/bugfix based on plan name). Create merge worktree from development branch. All tasks merge back to this merge branch. |
 | **GATE 2: TDD** | Implementer phase | MUST invoke `nbl.test-driven-development` skill |
 | **GATE 3: Built-In Self-Review** | Implementer phase | Each implementer MUST perform two-stage self-review before reporting DONE |
 | **GATE 4: Global Spec Review** | After all levels complete | MUST invoke spec reviewer on all merged changes |
 | **GATE 5: Global Quality Review** | After global spec review | MUST invoke code quality reviewer on all merged changes |
 
-**Note:** Each task creates its own isolated worktree when dispatched. No top-level worktree is created at startup. After all tasks complete, everything is merged to the development branch (auto-created if starting from main). User manually merges dev branch to main when ready.
+**Note:** Create one merge worktree at startup from the base development branch. Each task in each level creates its own isolated worktree from the merge worktree, completes, merges back, and is cleaned up. After all tasks complete, the merge worktree contains all changes and `finishing-a-development-branch` is invoked to present options to the user.
 
 ## Model Selection
 
