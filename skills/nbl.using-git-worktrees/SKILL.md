@@ -26,7 +26,8 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 | Mode | Branch Name | Worktree Path |
 |------|-------------|---------------|
 | Single | `feature/{name}` | `.worktrees/{name}` |
-| Parallel | `feature/{name}-task{id}` | `.worktrees/{name}-task{id}` |
+| **Merge** | `feature/{name}-merge` | `.worktrees/{name}-merge` |
+| Parallel Task | `feature/{name}-task{id}` | `.worktrees/{name}-task{id}` |
 
 ## Usage
 
@@ -43,7 +44,20 @@ else
 fi
 ```
 
-### Parallel Worktree (Parallel Mode)
+### Merge Worktree (Parallel Mode Intermediate Buffer)
+
+**Same usage as Single Worktree** - just use base name ending with `-merge`. Existing scripts already support this pattern, no changes needed.
+
+```bash
+# For merge worktree in parallel mode
+if [[ "$OSTYPE" == "win32" ]] || [[ -n "${PSModulePath:-}" ]]; then
+    ./skills/nbl.using-git-worktrees/scripts/create-worktree.ps1 "<name>-merge"
+else
+    ./skills/nbl.using-git-worktrees/scripts/create-worktree.sh "<name>-merge"
+fi
+```
+
+### Parallel Worktree (Parallel Mode Tasks)
 
 ```bash
 # Create multiple worktrees for parallel tasks
