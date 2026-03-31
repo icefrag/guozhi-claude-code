@@ -54,6 +54,7 @@
 | **nbl.test-coverage** | 测试覆盖率分析 | 分析测试缺口 |
 | **nbl.tech-design** | 技术设计文档 | 生成技术方案 |
 | **nbl.deep-research** | 深度研究 | 网络调研 |
+| **nbl.status-line** | 自定义状态栏 | 安装显示模型/Git/上下文/成本的状态栏 |
 | **nbl.update-codemaps** | 更新CLAUDE.md | 项目结构变化 |
 | **nbl.update-rules** | 规则文件更新 | 修改编码规范 |
 | **nbl.writing-skills** | 编写新skill | 创建/修改skill |
@@ -96,5 +97,6 @@ skills/
 ├── nbl.update-codemaps/             # 生成项目 CLAUDE.md 文档
 ├── nbl.update-rules/                # 管理更新规则文件
 ├── nbl.writing-skills/              # 创建和修改技能
-└── nbl.test-driven-development/     # 测试驱动开发
+├── nbl.test-driven-development/     # 测试驱动开发
+└── nbl.status-line/                 # 自定义 Claude Code 状态栏
 ```
