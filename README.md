@@ -54,11 +54,23 @@
 | **nbl.test-coverage** | 测试覆盖率分析 | 分析测试缺口 |
 | **nbl.tech-design** | 技术设计文档 | 生成技术方案 |
 | **nbl.deep-research** | 深度研究 | 网络调研 |
-| **nbl.status-line** | 自定义状态栏 | 安装显示模型/Git/上下文/成本的状态栏 |
+| **nbl.status-line** | 自定义状态栏 | 安装显示模型/Git/上下文/成本/worktree的状态栏 |
 | **nbl.update-codemaps** | 更新CLAUDE.md | 项目结构变化 |
 | **nbl.update-rules** | 规则文件更新 | 修改编码规范 |
 | **nbl.writing-skills** | 编写新skill | 创建/修改skill |
 | **nbl.test-driven-development** | 测试驱动开发 | 新功能、bugfix |
+
+**nbl.status-line 效果展示：**
+
+```
+[Haiku 4.5] 📁 nbl.status-line | 🌿 main clean
+██░░░░░░░░ 15% | $0.12 | ⏱️ 0m 50s
+ Worktrees:
+  1. feature-auth → fix-login +2~1?3
+  2. feature-api → main clean
+```
+
+显示内容：模型名称、项目名、Git 分支及状态（+staged ~modified ?untracked）、上下文使用率进度条、费用、耗时，以及 worktree 列表。
 
 ## 工作流
 
