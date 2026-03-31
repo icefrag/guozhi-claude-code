@@ -36,10 +36,10 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 # Detect platform and run appropriate script
 if [[ "$OSTYPE" == "win32" ]] || [[ -n "${PSModulePath:-}" ]]; then
     # PowerShell (Windows native)
-    ./scripts/create-worktree.ps1 <base_name>
+    ./skills/nbl.using-git-worktrees/scripts/create-worktree.ps1 <base_name>
 else
     # Bash (Linux/macOS/Git-Bash)
-    ./scripts/create-worktree.sh <base_name>
+    ./skills/nbl.using-git-worktrees/scripts/create-worktree.sh <base_name>
 fi
 ```
 
@@ -48,7 +48,7 @@ fi
 ```bash
 # Create multiple worktrees for parallel tasks
 for task_id in 1 2 3; do
-    ./scripts/create-worktree.sh <base_name> $task_id
+    ./skills/nbl.using-git-worktrees/scripts/create-worktree.sh <base_name> $task_id
 done
 ```
 
@@ -58,10 +58,10 @@ done
 
 ```bash
 # Check for unmerged commits first
-./scripts/cleanup-worktree.sh <base_name>
+./skills/nbl.using-git-worktrees/scripts/cleanup-worktree.sh <base_name>
 
 # Force delete if needed
-./scripts/cleanup-worktree.sh <base_name> --force
+./skills/nbl.using-git-worktrees/scripts/cleanup-worktree.sh <base_name> --force
 ```
 
 ### Parallel Worktrees
@@ -69,7 +69,7 @@ done
 ```bash
 # Cleanup each task's worktree
 for task_id in 1 2 3; do
-    ./scripts/cleanup-worktree.sh <base_name> $task_id [--force]
+    ./skills/nbl.using-git-worktrees/scripts/cleanup-worktree.sh <base_name> $task_id [--force]
 done
 ```
 
