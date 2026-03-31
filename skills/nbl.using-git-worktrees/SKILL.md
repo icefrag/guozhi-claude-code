@@ -115,3 +115,37 @@ done
 
 **Pairs with:**
 - **finishing-a-development-branch** - REQUIRED for cleanup after work complete
+
+## Windows Git Bash 兼容性
+
+在 Windows 平台上使用 Git Bash 时，skill 脚本的完整路径由 Claude Code 以 Windows 格式给出（`C:\Users\...`），**必须**转换为 Git Bash 格式后再调用：
+
+### 转换规则
+1. **驱动器号转换**: `C:\` → `/c/` (盘符小写)
+2. **分隔符转换**: **所有**反斜杠 `\` → 正斜杠 `/`，**禁止混合**
+3. **引号包裹**: 始终用双引号包裹整个路径
+
+### 常见错误案例
+
+❌ **错误 1 - 混合斜杠**（前半反斜杠，后半正斜杠）：
+```bash
+bash C:\Users\icefr\.claude\plugins\marketplaces\nbl-dev\skills\nbl.using-git-worktrees/scripts/create-worktree.sh log-analyzer-merge
+```
+反斜杠被 Bash 当作转义符逐个吃掉，路径完全损坏。**这是最常见的错误**。
+
+❌ **错误 2 - 无引号全反斜杠**：
+```bash
+bash C:\Users\icefr\.claude\plugins\marketplaces\nbl-dev\skills\nbl.using-git-worktrees\scripts\create-worktree.sh log-analyzer-merge
+```
+即使全部反斜杠，不加引号时所有反斜杠依然会被 Bash 转义吃掉。
+
+✅ **正确调用**（全正斜杠 + 引号）：
+```bash
+bash "/c/Users/icefr/.claude/plugins/marketplaces/nbl-dev/skills/nbl.using-git-worktrees/scripts/create-worktree.sh" log-analyzer-merge
+```
+
+### 判断逻辑
+- 如果 Base directory 以 `C:\` / `D:\` 等 Windows 盘符开头 → 需要完整转换
+- 如果 Base directory 以 `/` 开头 → macOS/Linux，直接调用，仍需加引号
+
+所有脚本调用都必须遵守此规则，避免路径转义错误。
