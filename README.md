@@ -25,7 +25,7 @@
 /plugin marketplace add https://github.com/icefrag/nbl-superpowers
 
 # 安装插件
-/plugin install nbl.superpowers@nbl.superpowers-dev
+/plugin install nbl.superpowers@nbl.superpowers
 ```
 
 ---
