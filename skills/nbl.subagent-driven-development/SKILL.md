@@ -43,13 +43,13 @@ digraph when_to_use {
 Before any task execution, these gates MUST pass:
 
 **GATE 1: Git Worktree Isolation**
+- **Pre-Check: Must be a Git repository**
+  - Check if current directory is a Git repository
+  - If **NOT** a Git repository → **STOP immediately** and tell the user:
+    > "Error: nbl.subagent-driven-development requires a Git repository. Please run `git init` to initialize a repository, then retry."
 - MUST run in a git worktree (never main/master branch)
 - If not in worktree:
-  - If **not a git repository** (new project):
-    1. `git init` → add all files → initial commit (now on main/master)
-    2. create `develop` branch from main/master → checkout main worktree to `develop`
-    3. invoke `nbl.using-git-worktrees` to create isolated worktree with branch `feature/{plan-name}`
-  - On main/master (already git repository):
+  - On main/master (already a Git repository):
     - **auto-create development branch** (feature/bugfix based on plan name), checkout main worktree to it, then create worktree
   - On feature/bugfix dev branch → invoke `nbl.using-git-worktrees` to create isolated worktree
 - No exceptions
@@ -75,9 +75,9 @@ digraph process {
     rankdir=TB;
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
+    "Pre-Check: Is git repository?" [shape=diamond style=filled fillcolor=yellow];
+    "STOP: Not a git repository" [shape=box style=filled fillcolor=red];
     "GATE 1: In git worktree?" [shape=diamond style=filled fillcolor=yellow];
-    "Is git repository?" [shape=diamond style=filled fillcolor=yellow];
-    "Init git, commit, create develop, checkout to develop" [shape=box];
     "Auto-create dev branch from plan name" [shape=box];
     "Invoke nbl.using-git-worktrees" [shape=box];
     "GATE 2: TDD mode enabled?" [shape=diamond style=filled fillcolor=yellow];
@@ -95,13 +95,13 @@ digraph process {
     "Dispatch fix agent for quality issues" [shape=box];
     "Use nbl.finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "GATE 1: In git worktree?";
+    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Pre-Check: Is git repository?";
+    "Pre-Check: Is git repository?" -> "STOP: Not a git repository" [label="no"];
+    "Pre-Check: Is git repository?" -> "GATE 1: In git worktree?" [label="yes"];
     "GATE 1: In git worktree?" -> "GATE 2: TDD mode enabled?" [label="yes"];
     "GATE 1: In git worktree?" -> "On main/master branch?" [label="no"];
     "On main/master branch?" -> "Invoke nbl.using-git-worktrees" [label="no (on dev branch)"];
-    "On main/master branch?" -> "Is git repository?" [label="yes (on main)"];
-    "Is git repository?" -> "Auto-create dev branch from plan name" -> "Invoke nbl.using-git-worktrees" [label="yes (existing repo)"];
-    "Is git repository?" -> "Init git, commit, create develop, checkout to develop" -> "Invoke nbl.using-git-worktrees" [label="no (new repo)"];
+    "On main/master branch?" -> "Auto-create dev branch from plan name" -> "Invoke nbl.using-git-worktrees" [label="yes (on main)"];
     "Invoke nbl.using-git-worktrees" -> "GATE 1: In git worktree?";
     "GATE 1: In git worktree?" -> "GATE 2: TDD mode enabled?" [label="yes"];
     "GATE 2: TDD mode enabled?" -> "More tasks remain?" [label="yes"];

@@ -47,7 +47,7 @@ BASE_NAME="$1"
 TASK_ID="$2"
 NO_CLEANUP=0
 
-if [[ "$3" == "--no-cleanup" ]]; then
+if [[ "${3:-}" == "--no-cleanup" ]]; then
     NO_CLEANUP=1
 fi
 

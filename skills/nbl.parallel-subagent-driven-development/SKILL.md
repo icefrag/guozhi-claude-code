@@ -13,20 +13,15 @@ Execute plan by dispatching fresh subagent per task. Each implementer performs b
 
 **Parallel execution:** Analyzes task dependencies, groups tasks by level, and executes independent tasks in parallel within each level.
 
-## ⛔ STOP: Read Before ANY Action
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  BEFORE reading plan, BEFORE creating tasks, BEFORE anything:   │
-│                                                                 │
-│  1. On main/master branch → AUTO-create feature/bugfix branch  │
-│  2. Each task creates its own isolated worktree when dispatched │
-│                                                                 │
-│  No top-level worktree needed before starting                   │
-└─────────────────────────────────────────────────────────────────┘
-```
-
 **Key difference from previous design:** Parallel mode creates a top-level merge worktree at startup from the base development branch. All tasks in each level fork from this merge worktree and merge back to it after completion. After all tasks complete, only the merge worktree remains with all accumulated changes, and the original finishing-a-development-branch skill can be used.
+
+## ⛔ Pre-Check: Git Repository Validation
+
+**This skill requires a Git repository.** Before any action:
+1. Check if current directory is a Git repository (`git rev-parse --is-inside-work-tree`)
+2. If **NOT** a Git repository → **STOP immediately** and tell the user:
+   > "Error: nbl.parallel-subagent-driven-development requires a Git repository. Please run `git init` to initialize a repository, then retry."
+3. If it IS a Git repository → continue to next steps
 
 ## NON-NEGOTIABLE Requirements (Read BEFORE Starting)
 
@@ -304,6 +299,8 @@ digraph process {
     subgraph cluster_setup {
         label="Setup Phase";
         style=filled fillcolor=lightyellow;
+        "Pre-Check: Is git repository?" [shape=diamond style=filled fillcolor=yellow];
+        "STOP: Not a git repository" [shape=box style=filled fillcolor=red];
         "⛔ GATE 1: Check current branch" [shape=box style=filled fillcolor=yellow];
         "On main/master?" [shape=diamond style=filled fillcolor=yellow];
         "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
@@ -319,6 +316,8 @@ digraph process {
     }
 
     // Pre-execution flow
+    "Pre-Check: Is git repository?" -> "STOP: Not a git repository" [label="no"];
+    "Pre-Check: Is git repository?" -> "⛔ GATE 1: Check current branch" [label="yes"];
     "⛔ GATE 1: Check current branch" -> "On main/master?";
     "On main/master?" -> "Read plan, extract all tasks with full text, note context, create TodoWrite" [label="no - ok, create merge worktree from dev branch"];
     "On main/master?" -> "Auto-create dev branch from plan name" [label="yes"];
@@ -389,6 +388,7 @@ digraph process {
 
 | Gate | Location | Requirement |
 |------|----------|-------------|
+| **Pre-Check: Git Repository** | Before anything | Must be in a Git repository. If not, stop immediately and prompt user to run `git init`. |
 | **GATE 1: Branch Check + Merge Worktree** | BEFORE starting levels | If on main/master → **auto-create development branch** (feature/bugfix based on plan name). Create merge worktree from development branch. All tasks merge back to this merge branch. |
 | **GATE 2: TDD** | Implementer phase | MUST invoke `nbl.test-driven-development` skill |
 | **GATE 3: Built-In Self-Review** | Implementer phase | Each implementer MUST perform two-stage self-review before reporting DONE |
