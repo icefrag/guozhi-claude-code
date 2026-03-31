@@ -87,7 +87,8 @@ digraph process {
     "Global Stage 2: Code quality review (all merged changes)" [shape=box];
     "Quality review passes?" [shape=diamond];
     "Dispatch fix agent for quality issues" [shape=box];
-    "Use nbl.finishing-a-development-branch with mode=serial" [shape=box style=filled fillcolor=lightgreen];
+    "Auto merge from worktree to base branch" [shape=box];
+    "Use nbl.finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "GATE 1: In git worktree?";
     "GATE 1: In git worktree?" -> "GATE 2: TDD mode enabled?" [label="yes"];
@@ -115,6 +116,31 @@ digraph process {
     "Quality review passes?" -> "Use nbl.finishing-a-development-branch" [label="yes"];
 }
 ```
+
+### Auto Merge from Worktree
+
+After both reviews pass:
+
+1. **Auto-commit any uncommitted changes in worktree**
+   ```bash
+   worktree_path=$(find .worktrees -type d | head -1)
+   if [ -n "$(git -C "$worktree_path" status --porcelain)" ]; then
+     git -C "$worktree_path" add .
+     git -C "$worktree_path" commit -m "chore: auto-commit remaining changes [skip ci]"
+   fi
+   ```
+
+2. **Fast-forward merge to base branch**
+   ```bash
+   base_branch=$(git branch --show-current)
+   feature_branch=$(git -C "$worktree_path" rev-parse --abbrev-ref HEAD)
+   git merge --ff-only "$feature_branch"
+   ```
+
+3. **Verify tests after merge**
+   - If tests fail → abort, report failure
+
+**All changes merged before calling finishing.**
 
 ## Model Selection
 
@@ -210,7 +236,7 @@ Spec reviewer: ✅ All changes spec compliant
 [Dispatch global code quality reviewer on all changes]
 Code reviewer: ✅ All changes meet quality standards
 
-[Invoke nbl.finishing-a-development-branch with mode=serial]
+[Invoke nbl.finishing-a-development-branch]
 
 Done!
 ```
@@ -282,7 +308,7 @@ Done!
 **Supporting skills:**
 - **nbl.writing-plans** - Creates the plan this skill executes
 - **nbl.requesting-code-review** - Code review template for final global review
-- **nbl.finishing-a-development-branch** - Complete development after all tasks with mode=serial
+- **nbl.finishing-a-development-branch** - Complete development after all tasks merged
 
 **Prompt templates:**
 - `./implementer-prompt.md` - Implementer with built-in two-stage self-review
