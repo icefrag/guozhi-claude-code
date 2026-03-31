@@ -109,15 +109,10 @@ if ($LASTEXITCODE -eq 0) {
 }
 
 #-------------------------------------------------------------------------------
-# 切换到 worktree
-#-------------------------------------------------------------------------------
-
-Set-Location $WorktreePath
-Write-Host "📍 当前目录: $(Get-Location)"
-
-#-------------------------------------------------------------------------------
 # 输出结果
 #-------------------------------------------------------------------------------
+
+Write-Host "📍 Worktree 路径: $PWD/$WorktreePath"
 
 if ($OutputFile) {
     Output-SuccessJson -File $OutputFile -WorktreePath $WorktreePath -BranchName $BranchName -IsNew $IsNew -Message $Message
