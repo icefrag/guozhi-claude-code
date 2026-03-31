@@ -65,40 +65,26 @@ The merge worktree contains all accumulated changes from all parallel tasks. **D
 ### Step 3: Determine Base Branch
 
 ```bash
-# Get current branch
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+# Get the primary worktree's current branch (first entry in git worktree list)
+# This is the branch we created the current worktree from — the correct merge target
+PRIMARY_WORKTREE=$(git worktree list | head -1)
+BASE_BRANCH=$(echo "$PRIMARY_WORKTREE" | sed -n 's/.*\[\(.*\)\]$/\1/p')
 
-# If current branch is already a feature/dev branch (not main/master), check what it split from
-# Common case: development from feature-xxx to feature-xxx-taskxxx
-if [[ "$CURRENT_BRANCH" != "main" && "$CURRENT_BRANCH" != "master" ]]; then
-  # Try to find the nearest ancestor branch that exists locally
-  for target_branch in $(git branch --format="%(refname:short)"); do
-    if [[ "$target_branch" != "$CURRENT_BRANCH" && "$target_branch" != "main" && "$target_branch" != "master" ]]; then
-      if git merge-base --is-ancestor $(git merge-base HEAD "$target_branch") HEAD; then
-        FOUND_BASE=$target_branch
-        break
-      fi
-    fi
-  done
-  if [[ -n "$FOUND_BASE" ]]; then
-    BASE_BRANCH=$FOUND_BASE
+# Fallback if branch name could not be extracted
+if [[ -z "$BASE_BRANCH" ]]; then
+  if git show-ref --verify --quiet refs/heads/main; then
+    BASE_BRANCH="main"
   else
-    BASE_BRANCH=$(git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null)
-    if [[ -n "$BASE_BRANCH" ]]; then
-      BASE_BRANCH="main"
-    else
-      BASE_BRANCH="master"
-    fi
+    BASE_BRANCH="master"
   fi
-else
-  BASE_BRANCH=$CURRENT_BRANCH
 fi
 ```
 
 **Logic:**
-1. If current branch is already a feature branch (not main/master) → try to find the nearest ancestor feature branch as base
-2. Falls back to main/master if no ancestor found
-3. Ask user to confirm: "This branch split from `<base-branch>` - is that correct?"
+1. `git worktree list` first entry is always the primary worktree — the branch it's on is where this worktree was created from
+2. Extract branch name from `[...]` at end of line
+3. Fallback to `main`/`master` only if extraction fails
+4. Ask user to confirm: "This branch split from `<base-branch>` - is that correct?"
 
 ### Step 4: Present Options
 
@@ -176,15 +162,27 @@ If tests pass: Continue with push:
 # Push branch
 git push -u origin <feature-branch>
 
-# Create PR
-gh pr create --title "<title>" --body "$(cat <<'EOF'
+# Create PR/MR body template
+PR_BODY=$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
 
 ## Test Plan
 - [ ] <verification steps>
 EOF
-)"
+)
+
+# Create PR/MR - auto-detect GitHub/GitLab
+if command -v gh >/dev/null 2>&1; then
+  # GitHub CLI
+  gh pr create --title "<title>" --body "$PR_BODY"
+elif command -v glab >/dev/null 2>&1; then
+  # GitLab CLI
+  glab mr create --title "<title>" --description "$PR_BODY"
+else
+  echo "No GitHub CLI (gh) or GitLab CLI (glab) found."
+  echo "Branch pushed to <feature-branch>, please create your PR/MR manually."
+fi
 ```
 
 Then: Cleanup worktree (Step 6)
