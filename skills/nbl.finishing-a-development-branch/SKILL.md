@@ -9,7 +9,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Merge worktree to dev branch (if parallel mode) → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Present options → Execute choice (merge if selected) → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -54,32 +54,13 @@ ls .worktrees/*-merge 2>/dev/null
 | **Serial** | Single worktree from dev branch | `.worktrees/{name}/` |
 | **Parallel** | Merge worktree exists | `.worktrees/{name}-merge/` + (task worktrees already cleaned) |
 
-**If parallel mode detected:** Execute Step 2A first.
+**If parallel mode detected:** Execute Step 2A (detect only, no auto-merge).
 
-### Step 2A: Merge Worktree → Dev Branch (Parallel Mode Only)
+### Step 2A: Detect Parallel Mode (No Auto-Merge)
 
-**This step MUST execute before presenting options when parallel mode is detected.**
+**Parallel mode detected when merge worktree exists (`feature/{name}-merge` branch at `.worktrees/{name}-merge/`).**
 
-The merge worktree contains all accumulated changes from all parallel tasks. Merge it back to the development branch:
-
-```bash
-# Determine names from merge worktree
-# merge worktree branch pattern: feature/{name}-merge
-MERGE_BRANCH=$(git branch --show-current)  # or infer from worktree list
-
-# Switch to development branch (in main workspace, not in worktree)
-git checkout <development-branch>
-
-# Merge the merge branch
-git merge --ff-only feature/<name>-merge
-
-# Verify tests on merged result
-<test command>
-```
-
-**If tests fail:** Stop and fix before proceeding.
-
-**If tests pass:** Development branch now contains all changes. Continue to Step 3.
+The merge worktree contains all accumulated changes from all parallel tasks. **Do NOT merge automatically.** The merge will be performed after user selection in Step 5. Continue directly to Step 3.
 
 ### Step 3: Determine Base Branch
 
@@ -140,6 +121,21 @@ Which option?
 
 #### Option 1: Merge Locally
 
+**Parallel mode only:** First merge merge branch to development branch:
+```bash
+# Switch to development branch (base branch in parallel mode)
+git checkout <development-branch>
+
+# Merge the completed merge branch
+git merge --ff-only feature/<name>-merge
+
+# Verify tests on merged result
+<test command>
+```
+
+**If tests fail:** Stop and fix before proceeding.
+
+If tests pass: Continue with merge to base branch:
 ```bash
 # Switch to base branch
 git checkout <base-branch>
@@ -147,7 +143,7 @@ git checkout <base-branch>
 # Pull latest
 git pull
 
-# Merge feature branch
+# Merge development branch
 git merge <feature-branch>
 
 # Verify tests on merged result
@@ -161,6 +157,21 @@ Then: Cleanup worktree (Step 6)
 
 #### Option 2: Push and Create PR
 
+**Parallel mode only:** First merge merge branch to development branch:
+```bash
+# Switch to development branch
+git checkout <development-branch>
+
+# Merge the completed merge branch
+git merge --ff-only feature/<name>-merge
+
+# Verify tests on merged result
+<test command>
+```
+
+**If tests fail:** Stop and fix before proceeding.
+
+If tests pass: Continue with push:
 ```bash
 # Push branch
 git push -u origin <feature-branch>
@@ -180,9 +191,13 @@ Then: Cleanup worktree (Step 6)
 
 #### Option 3: Keep As-Is
 
-Report: "Keeping branch <name>. Worktree preserved at <path>."
+**Parallel mode:** Do NOT merge merge branch to development branch. Do NOT cleanup merge worktree.
 
-**Don't cleanup worktree.**
+Report: "Keeping branch <name>. Merge worktree preserved at `.worktrees/{name}-merge/`. You can finish the merge later."
+
+**Don't cleanup any worktree.**
+
+**Serial/Inline mode:** Same as before - keep worktree as-is.
 
 #### Option 4: Discard
 
@@ -190,8 +205,8 @@ Report: "Keeping branch <name>. Worktree preserved at <path>."
 ```
 This will permanently delete:
 - Branch <name>
-- All commits: <commit-list>
-- Worktree at <path>
+- All commits in merge branch: <commit-list>
+- Merge worktree at <path>
 
 Type 'discard' to confirm.
 ```
@@ -200,11 +215,12 @@ Wait for exact confirmation.
 
 If confirmed:
 ```bash
+# Parallel mode: Delete merge branch directly, do not merge
 git checkout <base-branch>
-git branch -D <feature-branch>
+git branch -D feature/<name>-merge
 ```
 
-Then: Cleanup worktree (Step 6)
+Then: Cleanup merge worktree (Step 6)
 
 ### Step 6: Cleanup Worktree
 
@@ -215,7 +231,7 @@ Then: Cleanup worktree (Step 6)
 Invoke `nbl.using-git-worktrees` cleanup:
 
 ```
-Invoke the skill with: /nbl.superpowers:nbl.using-git-worktrees cleanup <base_name> [--force]
+Invoke via: /nbl.superpowers:nbl.using-git-worktrees cleanup <base_name> [--force]
 ```
 
 **Parallel mode additional cleanup:**
@@ -223,19 +239,21 @@ Invoke the skill with: /nbl.superpowers:nbl.using-git-worktrees cleanup <base_na
 After cleaning up the main worktree, also clean up the merge worktree:
 
 ```
-Invoke the skill with: /nbl.superpowers:nbl.using-git-worktrees cleanup <name>-merge --force
+Invoke via: /nbl.superpowers:nbl.using-git-worktrees cleanup <name>-merge --force
 ```
 
 **For Option 3:** Keep worktree.
 
 ## Quick Reference
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch | Cleanup Merge WT |
-|--------|-------|------|---------------|----------------|------------------|
-| 1. Merge locally | ✓ | - | - | ✓ | ✓ (parallel only) |
-| 2. Create PR | - | ✓ | - | - | ✓ (parallel only) |
-| 3. Keep as-is | - | - | ✓ | - | - |
-| 4. Discard | - | - | - | ✓ (force) | ✓ (parallel only) |
+| Option | Auto-merge<br/>Merge WT → Dev | Merge<br/>Dev → Base | Push | Keep Worktree | Cleanup Branch | Cleanup Merge WT |
+|--------|-------------------------------|----------------------|------|---------------|----------------|------------------|
+| 1. Merge locally | ✓ | ✓ | - | - | ✓ | ✓ (parallel only) |
+| 2. Create PR | ✓ | - | ✓ | - | - | ✓ (parallel only) |
+| 3. Keep as-is | ✗ | - | - | ✓ | - | - (keep) |
+| 4. Discard | ✗ (no merge) | - | - | - | ✓ (force) | ✓ (parallel only) |
+
+**Key change (parallel mode):** Merge from merge worktree to development branch only happens after user selects Option 1 or 2. Option 3 keeps everything as-is for later completion.
 
 ## Mode-Specific Behavior
 
@@ -251,9 +269,11 @@ Invoke the skill with: /nbl.superpowers:nbl.using-git-worktrees cleanup <name>-m
 
 ### Parallel Mode (parallel-subagent-driven-development)
 
-- Merge worktree: `.worktrees/{name}-merge/` — merged to dev branch in Step 2A
+- Merge worktree: `.worktrees/{name}-merge/` — **NOT merged automatically**
 - Task worktrees already cleaned up during execution (by `sub-to-sub-merge` script)
-- After Step 2A: clean up merge worktree using `cleanup-worktree` script
+- Merge to development branch only happens when user selects Option 1 or 2
+- Option 3 keeps merge worktree for later completion
+- Cleanup only happens after user selection, never automatically
 
 ## Common Mistakes
 
@@ -271,7 +291,7 @@ Invoke the skill with: /nbl.superpowers:nbl.using-git-worktrees cleanup <name>-m
 
 **Forgetting merge worktree in parallel mode**
 - **Problem:** Merge worktree left dangling after parallel tasks
-- **Fix:** Step 2A merges to dev branch, Step 6 cleans up merge worktree
+- **Fix:** Option 1/2 triggers merge to dev branch then cleanup; Option 3 preserves for later
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work
