@@ -163,6 +163,21 @@ skills/
 
 ---
 
+## 更新方式
+<img width="1172" height="628" alt="image" src="https://github.com/user-attachments/assets/8ae38a00-d2de-4d16-a9ef-ca16cadf5548" />
+<img width="1314" height="518" alt="image" src="https://github.com/user-attachments/assets/23c7597b-fd15-4ff6-b729-ea4a0354c328" />
+<img width="1452" height="638" alt="image" src="https://github.com/user-attachments/assets/bc13ca8f-8c07-4c78-8415-ef539d14f6f7" />
+<img width="1320" height="622" alt="image" src="https://github.com/user-attachments/assets/98ed4f12-6f67-4364-afae-fe028cf06ff3" />
+<img width="1708" height="826" alt="image" src="https://github.com/user-attachments/assets/a66194de-570e-415d-9cd0-6d1060db49f7" />
+
+
+
+
+
+
+
+---
+
 ## 📄 许可证
 
 遵循原项目许可证，扩展部分遵循相同协议。
