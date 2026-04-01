@@ -18,14 +18,30 @@ total_cost=$(echo "$input" | jq -r '.cost.total_cost_usd // 0')
 duration_ms=$(echo "$input" | jq -r '.cost.total_duration_ms // 0')
 
 # ── Project name ──
-# Use basename to handle both forward slash (Linux/macOS) and backslash (Windows)
-proj_name=$(basename "$current_dir")
-
-# ── Git status ──
+# Always get project name from main worktree (first in worktree list)
+proj_name=""
 git_status_output=""
 branch=""
+
+# Try to get main worktree from git worktree list first
 if [ -n "$current_dir" ] && cd "$current_dir" 2>/dev/null && git rev-parse --git-dir > /dev/null 2>&1; then
-  # 获取当前目录所在分支，保持在当前目录统计状态
+  if git worktree list --porcelain >/dev/null 2>&1; then
+    main_wt_path=$(git worktree list --porcelain 2>/dev/null | grep "^worktree" | head -1 | sed 's/^worktree //')
+    if [ -n "$main_wt_path" ]; then
+      proj_name=$(basename "$main_wt_path")
+      if ! cd "$main_wt_path" 2>/dev/null; then
+        proj_name=$(basename "$current_dir")
+        cd "$current_dir" 2>/dev/null
+      fi
+    else
+      proj_name=$(basename "$current_dir")
+      cd "$current_dir" 2>/dev/null
+    fi
+  else
+    proj_name=$(basename "$current_dir")
+    cd "$current_dir" 2>/dev/null
+  fi
+
   branch=$(git --no-optional-locks branch --show-current 2>/dev/null)
   [ -z "$branch" ] && branch=$(git --no-optional-locks rev-parse --short HEAD 2>/dev/null)
 
