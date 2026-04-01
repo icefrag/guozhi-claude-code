@@ -73,8 +73,16 @@ fi
 #-------------------------------------------------------------------------------
 
 read -r TASK_BRANCH TASK_PATH <<< "$(compute_names "$BASE_NAME" "$TASK_ID")"
-MERGE_BRANCH="feature/${BASE_NAME}-merge"
-MERGE_PATH=".worktrees/${BASE_NAME}-merge"
+
+# 如果 BASE_NAME 已经以 -merge 结尾，说明合并分支就是它本身
+# 否则，添加 -merge 后缀
+if [[ "$BASE_NAME" =~ -merge$ ]]; then
+    MERGE_BRANCH="feature/${BASE_NAME}"
+    MERGE_PATH=".worktrees/${BASE_NAME}"
+else
+    MERGE_BRANCH="feature/${BASE_NAME}-merge"
+    MERGE_PATH=".worktrees/${BASE_NAME}-merge"
+fi
 
 echo "🔄 合并任务到合并 worktree:"
 echo "   base_name:   $BASE_NAME"
