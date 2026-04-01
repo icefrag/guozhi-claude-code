@@ -144,3 +144,16 @@ branch_exists() {
 prepare_worktrees_dir() {
     mkdir -p .worktrees
 }
+
+#-------------------------------------------------------------------------------
+# Git 根目录跳转
+#-------------------------------------------------------------------------------
+# 功能: 跳转到 Git 仓库根目录，解决从子目录调用时相对路径解析错误问题
+# 说明: 如果不在 Git 仓库中，不做任何操作，脚本继续在当前目录执行
+cd_to_git_root() {
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [[ -n "$git_root" && -d "$git_root" ]]; then
+        cd "$git_root"
+    fi
+}
