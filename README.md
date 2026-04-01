@@ -2,21 +2,64 @@
 
 **nbl** = **niubility**（牛逼）—— 名字来源于中文俚语，意为"极其出色、非常厉害"。
 
-基于 [superpowers](https://github.com/obra/superpowers) 技能体系的扩展。
-
-## 项目核心
-
-本项目在官方 superpowers 基础上，重点扩展了 **多 sub agent 并行执行任务** 的能力：
-
-| 特性 | 说明 |
-|------|------|
-| **nbl.parallel-subagent-driven-development** | 支持多个独立任务同时分派给多个子代理并行执行，充分利用 Claude Code 的多代理能力，大幅提升复杂任务完成效率 |
-
-所有其他 `nbl.*` skill 都是对官方 superpowers 对应 skill 的适配和增强，遵循官方 superpowers 的核心设计原则。
+基于官方 [superpowers](https://github.com/obra/superpowers) 技能体系的扩展，重点增强了**多代理并行开发**和**隔离工作区**能力。
 
 ---
 
-## 安装
+## 🛠 运行机制
+
+### 核心设计思想
+
+利用 **Git worktree** 实现物理空间隔离，结合 **subAgent** 实现任务级并行调度，原生支持多个需求同时开发，多个 Claude Code 会话并行工作互不冲突。
+
+### 为什么需要隔离开发？
+
+在传统单工作区开发模式中：
+- 多个未完成任务的代码混在一起，互相干扰
+- 同时打开多个 Claude Code 会话容易产生文件冲突
+- 切换任务需要频繁 `stash`/`unstash`，降低开发效率
+
+### Worktree 空间隔离
+
+`nbl.superpowers` 使用 **Git worktree** 实现开发空间隔离：
+
+- ✅ 每个开发任务创建独立的 worktree 子目录
+- ✅ 不同任务之间代码物理隔离，完全不干扰
+- ✅ 支持同时打开多个 Claude Code 会话，每个会话在不同 worktree 开发不同需求
+- ✅ 开发过程中代码保留在 worktree 子空间，不影响主分支
+- ✅ 开发完成后，人工审核确认，再合并到主开发分支
+
+### SubAgent 任务调度
+
+根据任务依赖关系，支持两种执行模式：
+
+| 模式 | Skill | 说明 | 适用场景 |
+|------|-------|------|----------|
+| **串行模式** | `nbl.subagent-driven-development` | 任务按依赖顺序依次执行，每个任务分配一个 subAgent | 任务之间存在依赖，必须按顺序完成 |
+| **并行模式** | `nbl.parallel-subagent-driven-development` | 多个独立任务同时分配给多个 subAgent 并行执行 | 多个无关任务，可以同时开工，大幅提升效率 |
+
+### 完整开发生命周期
+
+```mermaid
+flowchart TD
+    A[需求澄清<br/>nbl.brainstorming] --> B[输出设计文档]
+    B --> C[详细计划<br/>nbl.writing-plans]
+    C --> D[输出执行计划]
+    D --> E[创建隔离工作区<br/>nbl.using-git-worktrees]
+    E --> F{依赖关系?}
+    F -->|串行| G[subAgent 顺序执行]
+    F -->|并行| H[多 subAgent 并行执行]
+    G --> I[代码审查<br/>nbl.requesting-code-review]
+    H --> I
+    I --> J[修复问题<br/>nbl.receiving-code-review]
+    J --> K[人工审核确认]
+    K --> L[合并到主分支]
+    L --> M[清理 worktree<br/>nbl.finishing-a-development-branch]
+```
+
+---
+
+## 📥 安装
 
 在 Claude Code 中执行以下命令安装此插件：
 
@@ -30,85 +73,96 @@
 
 ---
 
-## Skills
+## 🧩 Skills
 
 ### 开发工作流
 
+按开发阶段排列：
+
 | Skill | 描述 | 阶段 |
 |-------|------|------|
-| **nbl.brainstorming** | 需求澄清和规格文档 | 需求 |
-| **nbl.writing-plans** | 详细计划 | 规划 |
-| **nbl.using-git-worktrees** | 隔离工作区 | 准备 |
-| **nbl.executing-plans** | 主 agent 直接执行 | 执行 |
-| **nbl.subagent-driven-development** | 子代理串行执行任务 | 执行 |
-| **nbl.parallel-subagent-driven-development** | 子代理并行执行任务 | 执行 |
-| **nbl.requesting-code-review** | 请求代码审查 | 审查 |
-| **nbl.receiving-code-review** | 处理CR反馈 | 审查 |
-| **nbl.finishing-a-development-branch** | 完成开发分支 | 收尾 |
+| **nbl.brainstorming** | 需求澄清和设计文档生成 | 📝 需求 |
+| **nbl.writing-plans** | 分解任务生成详细执行计划 | 📋 规划 |
+| **nbl.using-git-worktrees** | 创建 Git worktree 隔离工作区 | ⚙️ 准备 |
+| **nbl.executing-plans** | 主 Agent 直接执行简单任务 | ▶️ 执行 |
+| **nbl.subagent-driven-development** | SubAgent 串行执行任务 | ▶️ 执行 |
+| **nbl.parallel-subagent-driven-development** | SubAgent 并行执行多个任务 | ▶️ 执行 |
+| **nbl.requesting-code-review** | 请求代码审查 | 🔍 审查 |
+| **nbl.receiving-code-review** | 处理代码审查反馈 | 🔍 审查 |
+| **nbl.finishing-a-development-branch** | 合并清理，完成开发分支 | 🎬 收尾 |
 
 ### 独立工具 Skills
 
+这些是可独立使用的工具技能：
+
 | Skill | 描述 | 触发场景 |
 |-------|------|---------|
-| **nbl.refactor-clean** | 死代码清理 | 清理未使用代码 |
-| **nbl.test-coverage** | 测试覆盖率分析 | 分析测试缺口 |
-| **nbl.tech-design** | 技术设计文档 | 生成技术方案 |
-| **nbl.deep-research** | 深度研究 | 网络调研 |
-| **nbl.status-line** | 自定义状态栏 | 安装显示模型/Git/上下文/成本/worktree的状态栏 |
-| **nbl.update-codemaps** | 更新CLAUDE.md | 项目结构变化 |
-| **nbl.update-rules** | 规则文件更新 | 修改编码规范 |
-| **nbl.writing-skills** | 编写新skill | 创建/修改skill |
-| **nbl.test-driven-development** | 测试驱动开发 | 新功能、bugfix |
+| **nbl.refactor-clean** | Java Web 死代码清理和重构专家 | 清理未使用代码、重构优化 |
+| **nbl.test-coverage** | 测试覆盖率分析，生成缺失测试 | 提升测试覆盖率 |
+| **nbl.tech-design** | 根据需求生成技术设计文档 | 技术方案、API 设计、数据库设计 |
+| **nbl.deep-research** | 多源深度网络研究 | 需要调研收集信息 |
+| **nbl.status-line** | 自定义 Claude Code 状态栏 | 安装显示模型 / Git / 上下文 / 成本 / worktree 信息 |
+| **nbl.update-codemaps** | 生成项目 `CLAUDE.md` 文档 | 新建项目、项目结构变化 |
+| **nbl.update-rules** | 管理更新 `rules/common/` 规则文件 | 修改编码规范 |
+| **nbl.writing-skills** | 辅助创建和修改新技能 | 开发自定义 skill |
+| **nbl.test-driven-development** | 测试驱动开发工作流 | 新功能开发、Bug 修复 |
 
-**nbl.status-line 效果展示：**
+---
+
+## 📊 nbl.status-line 效果展示
+
+**nbl.status-line** 是一个自定义状态栏脚本，安装后会在 Claude Code 每次响应前显示：
 
 ```
-[Haiku 4.5] 📁 nbl.status-line | 🌿 main clean
+[Haiku 4.5] 📁 nbl.superpowers | 🌿 main clean
 ██░░░░░░░░ 15% | $0.12 | ⏱️ 0m 50s
  Worktrees:
-  1. feature-auth → fix-login +2~1?3
-  2. feature-api → main clean
+   1. feature-auth → fix-login +2~1?3
+   2. feature-api → main clean
 ```
 
-显示内容：模型名称、项目名、Git 分支及状态（+staged ~modified ?untracked）、上下文使用率进度条、费用、耗时，以及 worktree 列表。
+显示内容：模型名称、项目名、Git 分支及状态（+staged ~modified ?untracked）、上下文使用率进度条、费用累计、会话耗时，以及所有 worktree 列表。
 
-## 工作流
+---
 
-直接使用所需 skill：
-
-```
-brainstorming → design.md
-    ↓
-writing-plans → plan.md
-    ↓
-[执行模式选择]
-    ├── parallel-subagent-driven-development (多任务并行)
-    ├── subagent-driven-development (任务串行)
-    └── executing-plans (简单任务/无子代理支持)
-    ↓
-code-review → finish
-```
-
-## 目录结构
+## 📁 目录结构
 
 ```
 skills/
-├── nbl.brainstorming/               # 需求澄清
-├── nbl.writing-plans/               # 详细计划
-├── nbl.using-git-worktrees/         # 隔离工作区
-├── nbl.executing-plans/             # 主 agent 执行
-├── nbl.subagent-driven-development/ # 子代理串行执行
-├── nbl.parallel-subagent-driven-development/ # 子代理并行执行
+├── nbl.brainstorming/               # 需求澄清和设计
+├── nbl.writing-plans/               # 详细执行计划
+├── nbl.using-git-worktrees/         # Git worktree 隔离工作区
+├── nbl.executing-plans/             # 主 Agent 直接执行
+├── nbl.subagent-driven-development/ # SubAgent 串行执行
+├── nbl.parallel-subagent-driven-development/ # SubAgent 并行执行
 ├── nbl.requesting-code-review/      # 请求代码审查
 ├── nbl.receiving-code-review/       # 处理代码审查反馈
 ├── nbl.finishing-a-development-branch/ # 完成开发分支
-├── nbl.refactor-clean/              # Java Web 死代码清理和重构
+├── nbl.refactor-clean/              # Java Web 死代码清理
 ├── nbl.test-coverage/               # 测试覆盖率分析
-├── nbl.tech-design/                 # 根据需求生成技术设计文档
-├── nbl.deep-research/               # 多源深度网络研究
-├── nbl.update-codemaps/             # 生成项目 CLAUDE.md 文档
-├── nbl.update-rules/                # 管理更新规则文件
-├── nbl.writing-skills/              # 创建和修改技能
-├── nbl.test-driven-development/     # 测试驱动开发
-└── nbl.status-line/                 # 自定义 Claude Code 状态栏
+├── nbl.tech-design/                 # 技术设计文档生成
+├── nbl.deep-research/               # 多源深度研究
+├── nbl.status-line/                 # 自定义状态栏
+├── nbl.update-codemaps/             # 生成 CLAUDE.md 项目文档
+├── nbl.update-rules/                # 规则文件管理
+├── nbl.writing-skills/              # 技能开发工具
+└── nbl.test-driven-development/     # 测试驱动开发
 ```
+
+---
+
+## 💡 核心优势
+
+| 特性 | 说明 |
+|------|------|
+| **物理隔离** | Git worktree 级别的隔离，多个任务完全不干扰 |
+| **并行开发** | 多 subAgent 同时执行多个独立任务，充分利用 Claude Code 能力 |
+| **安全审核** | 代码在 worktree 开发完成，人工审核后才合并到主分支 |
+| **多会话支持** | 支持同时打开多个 Claude Code 会话并行处理多个需求 |
+| **兼容官方** | 所有技能遵循官方 superpowers 设计原则，学习成本低 |
+
+---
+
+## 📄 许可证
+
+遵循原项目许可证，扩展部分遵循相同协议。
