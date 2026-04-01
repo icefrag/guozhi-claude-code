@@ -45,18 +45,17 @@ fi
 
 BASE_NAME="$1"
 TASK_ID="$2"
-NO_CLEANUP=0
+NO_CLEANUP=false
 
 if [[ "${3:-}" == "--no-cleanup" ]]; then
-    NO_CLEANUP=1
+    NO_CLEANUP=true
 fi
 
 #-------------------------------------------------------------------------------
 # 推导名称和路径
 #-------------------------------------------------------------------------------
 
-TASK_BRANCH="feature/${BASE_NAME}-task${TASK_ID}"
-TASK_PATH=".worktrees/${BASE_NAME}-task${TASK_ID}"
+read -r TASK_BRANCH TASK_PATH <<< "$(compute_names "$BASE_NAME" "$TASK_ID")"
 MERGE_BRANCH="feature/${BASE_NAME}-merge"
 MERGE_PATH=".worktrees/${BASE_NAME}-merge"
 
@@ -86,14 +85,12 @@ if [[ ! -d "$MERGE_PATH" ]]; then
 fi
 
 # 检查分支是否存在
-git show-ref --verify --quiet "refs/heads/$TASK_BRANCH" 2>/dev/null
-if [[ $? -ne 0 ]]; then
+if ! branch_exists "$TASK_BRANCH"; then
     echo "❌ 任务分支不存在: $TASK_BRANCH"
     exit 1
 fi
 
-git show-ref --verify --quiet "refs/heads/$MERGE_BRANCH" 2>/dev/null
-if [[ $? -ne 0 ]]; then
+if ! branch_exists "$MERGE_BRANCH"; then
     echo "❌ 合并分支不存在: $MERGE_BRANCH"
     exit 1
 fi
@@ -142,7 +139,7 @@ echo
 # Step 3: 清理任务 worktree
 #-------------------------------------------------------------------------------
 
-if [[ $NO_CLEANUP -eq 1 ]]; then
+if [[ "$NO_CLEANUP" = true ]]; then
     echo "⏭️  Step 3: --no-cleanup 指定，跳过清理"
     echo
     echo "🎉 合并完成，任务 worktree 保留用于调试"

@@ -3,22 +3,12 @@
 # common.sh - Git Worktree 操作公共函数库 (Bash)
 #===============================================================================
 
-set -euo pipefail
-
 # 获取脚本所在目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 #-------------------------------------------------------------------------------
 # 输出函数
 #-------------------------------------------------------------------------------
-
-# 输出 JSON 格式结果到文件
-output_json() {
-    local file="$1"
-    shift
-    printf '%s\n' "$*" > "$file"
-}
 
 # 输出成功 JSON
 output_success_json() {
@@ -85,7 +75,7 @@ ensure_gitignore() {
     local changed=false
 
     # 如果 .gitignore 不存在，创建它
-    if [ ! -f ".gitignore" ]; then
+    if [[ ! -f ".gitignore" ]]; then
         echo ".worktrees/" > .gitignore
         echo "docs/" >> .gitignore
         changed=true
@@ -104,7 +94,7 @@ ensure_gitignore() {
         fi
     fi
 
-    if [ "$changed" = true ]; then
+    if [[ "$changed" = true ]]; then
         git add .gitignore
         git commit -m "chore: update .gitignore" > /dev/null 2>&1 || true
         echo "✅ .gitignore 已更新"
@@ -136,12 +126,21 @@ compute_names() {
 }
 
 #-------------------------------------------------------------------------------
+# Git 辅助检查
+#-------------------------------------------------------------------------------
+
+# 检查分支是否存在
+# 返回 0 表示存在，非 0 表示不存在
+branch_exists() {
+    local branch_name="$1"
+    git show-ref --verify --quiet "refs/heads/$branch_name" 2>/dev/null
+}
+
+#-------------------------------------------------------------------------------
 # 工作目录准备
 #-------------------------------------------------------------------------------
 
 # 准备工作目录（确保存在）
 prepare_worktrees_dir() {
-    if [ ! -d ".worktrees" ]; then
-        mkdir -p .worktrees
-    fi
+    mkdir -p .worktrees
 }

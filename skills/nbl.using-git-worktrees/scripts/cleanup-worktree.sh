@@ -33,7 +33,7 @@ BASE_NAME=""
 TASK_ID=""
 FORCE=false
 
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
     case "$1" in
         -h|--help)
             usage
@@ -46,7 +46,7 @@ while [ $# -gt 0 ]; do
             TASK_ID="$1"
             ;;
         *)
-            if [ -z "$BASE_NAME" ]; then
+            if [[ -z "$BASE_NAME" ]]; then
                 BASE_NAME="$1"
             fi
             ;;
@@ -54,7 +54,7 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-if [ -z "$BASE_NAME" ]; then
+if [[ -z "$BASE_NAME" ]]; then
     usage
     exit 1
 fi
@@ -79,25 +79,22 @@ ensure_git_repo
 BASE_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's/refs\/remotes\/origin\///') || BASE_BRANCH="main"
 
 # 检查是否有未合并到 base 分支的提交
-UNMERGED=$(git log "$BASE_BRANCH..$BRANCH_NAME" --oneline 2>/dev/null || echo "")
-
-if [ -n "$UNMERGED" ]; then
-    if [ "$FORCE" = false ]; then
-        echo "⚠️  检测到未合并的提交:"
-        echo "$UNMERGED"
-        echo ""
-        echo "请使用 --force 参数强制删除"
-        exit 1
-    else
-        echo "⚠️  警告: 继续删除未合并的提交"
-    fi
+if [[ "$FORCE" = false ]] && git log "$BASE_BRANCH..$BRANCH_NAME" --oneline -n 1 >/dev/null 2>&1; then
+    # 有未合并提交，显示内容并退出
+    echo "⚠️  检测到未合并的提交:"
+    git log "$BASE_BRANCH..$BRANCH_NAME" --oneline 2>/dev/null
+    echo ""
+    echo "请使用 --force 参数强制删除"
+    exit 1
+elif [[ "$FORCE" = true ]] && git log "$BASE_BRANCH..$BRANCH_NAME" --oneline -n 1 >/dev/null 2>&1; then
+    echo "⚠️  警告: 继续删除未合并的提交"
 fi
 
 #-------------------------------------------------------------------------------
 # 清理 worktree
 #-------------------------------------------------------------------------------
 
-if [ -d "$WORKTREE_PATH" ]; then
+if [[ -d "$WORKTREE_PATH" ]]; then
     if git worktree remove --force "$WORKTREE_PATH" 2>/dev/null; then
         echo "✅ Worktree 已删除"
     else
@@ -111,7 +108,7 @@ fi
 # 删除分支
 #-------------------------------------------------------------------------------
 
-if git show-ref --verify --quiet "refs/heads/$BRANCH_NAME"; then
+if branch_exists "$BRANCH_NAME"; then
     if git branch -d "$BRANCH_NAME" 2>/dev/null; then
         echo "✅ 分支 $BRANCH_NAME 已删除"
     else

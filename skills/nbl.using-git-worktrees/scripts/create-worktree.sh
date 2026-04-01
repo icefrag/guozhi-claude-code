@@ -31,7 +31,7 @@ EOF
 }
 
 # 参数检查
-if [ $# -lt 1 ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+if [[ $# -lt 1 ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
     usage
     exit 0
 fi
@@ -41,7 +41,7 @@ TASK_ID=""
 OUTPUT_FILE=""
 
 shift
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
     case "$1" in
         [0-9]*)
             TASK_ID="$1"
@@ -84,12 +84,12 @@ if git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME" 2>/dev/null; then
 else
     echo "⚠️  创建失败，尝试智能恢复..."
 
-    if [ -d "$WORKTREE_PATH" ]; then
+    if [[ -d "$WORKTREE_PATH" ]]; then
         # Case 1: 目录已存在 → 复用
         echo "📂 目录已存在，复用已有 worktree"
         IS_NEW=false
         MESSAGE="Reused existing worktree"
-    elif git show-ref --verify --quiet "refs/heads/$BRANCH_NAME"; then
+    elif branch_exists "$BRANCH_NAME"; then
         # Case 2: 分支存在但目录不存在 → 重新 attach
         echo "🔗 分支已存在，重新 attach worktree"
         if git worktree add "$WORKTREE_PATH" "$BRANCH_NAME"; then
@@ -98,13 +98,13 @@ else
             MESSAGE="Re-attached existing worktree"
         else
             echo "❌ 重新 attach 失败"
-            [ -n "$OUTPUT_FILE" ] && output_error_json "$OUTPUT_FILE" "Failed to re-attach existing worktree"
+            [[ -n "$OUTPUT_FILE" ]] && output_error_json "$OUTPUT_FILE" "Failed to re-attach existing worktree"
             exit 1
         fi
     else
         # Case 3: 其他错误
         echo "❌ 创建 worktree 失败"
-        [ -n "$OUTPUT_FILE" ] && output_error_json "$OUTPUT_FILE" "Failed to create worktree: unknown error"
+        [[ -n "$OUTPUT_FILE" ]] && output_error_json "$OUTPUT_FILE" "Failed to create worktree: unknown error"
         exit 1
     fi
 fi
@@ -115,7 +115,7 @@ fi
 
 # 删除 worktree 中的 docs 目录
 # 设计：计划文档和设计文档保存在主仓库，由主代理维护，子代理不需要
-if [ -d "$WORKTREE_PATH/docs" ]; then
+if [[ -d "$WORKTREE_PATH/docs" ]]; then
     echo "🧹 清理: 删除 worktree 中不需要的 docs 目录"
     rm -rf "$WORKTREE_PATH/docs"
 fi
@@ -126,11 +126,11 @@ fi
 
 echo "📍 Worktree 路径: $PWD/$WORKTREE_PATH"
 
-if [ -n "$OUTPUT_FILE" ]; then
+if [[ -n "$OUTPUT_FILE" ]]; then
     output_success_json "$OUTPUT_FILE" "$WORKTREE_PATH" "$BRANCH_NAME" "$IS_NEW" "$MESSAGE"
     echo "✅ 结果已输出到: $OUTPUT_FILE"
 else
-    if [ "$IS_NEW" = true ]; then
+    if [[ "$IS_NEW" = true ]]; then
         echo "🎉 Worktree 创建成功"
     else
         echo "🔄 Worktree 复用成功"
