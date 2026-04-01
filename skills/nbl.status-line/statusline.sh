@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Custom multi-line status line with model, git, context usage, cost, and worktree info
 
 input=$(cat)
@@ -9,14 +9,18 @@ YELLOW=$(printf '\033[33m')
 RED=$(printf '\033[31m')
 CYAN=$(printf '\033[36m')
 RESET=$(printf '\033[0m')
+BLUE=$(printf '\033[34m')
+MAGENTA=$(printf '\033[35m')
 
 # ── Extract data from input ──
-# Use here-string to avoid echo subshell for each jq call
-model=$(jq -r '.model.display_name // .model.id // "unknown"' <<< "$input")
-current_dir=$(jq -r '.workspace.current_dir // empty' <<< "$input")
-used_pct=$(jq -r '.context_window.used_percentage // empty' <<< "$input")
-total_cost=$(jq -r '.cost.total_cost_usd // 0' <<< "$input")
-duration_ms=$(jq -r '.cost.total_duration_ms // 0' <<< "$input")
+# Extract all fields in one jq call
+eval "$(jq -r '
+"model=" + (.model.display_name // .model.id // "unknown") + "\n" +
+"current_dir=" + (.workspace.current_dir // "") + "\n" +
+"used_pct=" + (.context_window.used_percentage // "") + "\n" +
+"total_cost=" + (.cost.total_cost_usd // 0) + "\n" +
+"duration_ms=" + (.cost.total_duration_ms // 0)
+' <<< "$input")"
 
 # ── Helper Functions ──
 
@@ -32,10 +36,10 @@ get_git_status() {
   modified=$(git --no-optional-locks -C "$repo_path" diff --numstat 2>/dev/null | wc -l | xargs)
   untracked=$(git --no-optional-locks -C "$repo_path" ls-files --others --exclude-standard 2>/dev/null | wc -l | xargs)
   output=""
-  [ "$staged" -gt 0 ]    && output="${output}${GREEN}+${staged}${RESET}"
-  [ "$modified" -gt 0 ]  && output="${output}${YELLOW}~${modified}${RESET}"
-  [ "$untracked" -gt 0 ] && output="${output}${RED}?${untracked}${RESET}"
-  if [ -z "$output" ]; then
+  [[ "$staged" -gt 0 ]]    && output="${output}${GREEN}+${staged}${RESET}"
+  [[ "$modified" -gt 0 ]]  && output="${output}${YELLOW}~${modified}${RESET}"
+  [[ "$untracked" -gt 0 ]] && output="${output}${RED}?${untracked}${RESET}"
+  if [[ -z "$output" ]]; then
     output="${GREEN}clean${RESET}"
   fi
   printf "%s" "$output"
@@ -64,14 +68,14 @@ branch=""
 worktree_list=""
 
 # Check if we're in a git repository
-if [ -n "$current_dir" ] && git rev-parse --git-dir >/dev/null 2>&1 -C "$current_dir"; then
+if [[ -n "$current_dir" ]] && git rev-parse --git-dir >/dev/null 2>&1 -C "$current_dir"; then
   # Try to get worktree list once (reused later for worktree listing)
   worktree_list=$(git worktree list --porcelain 2>/dev/null)
 
-  if [ -n "$worktree_list" ]; then
+  if [[ -n "$worktree_list" ]]; then
     # Extract main worktree path (first entry)
     main_wt_path=$(echo "$worktree_list" | grep "^worktree" | head -1 | sed 's/^worktree //')
-    if [ -n "$main_wt_path" ] && git rev-parse --git-dir >/dev/null 2>&1 -C "$main_wt_path"; then
+    if [[ -n "$main_wt_path" ]] && git rev-parse --git-dir >/dev/null 2>&1 -C "$main_wt_path"; then
       # Found valid main worktree - use it
       proj_name=$(basename "$main_wt_path")
       branch=$(get_branch "$main_wt_path")
@@ -90,19 +94,19 @@ fi
 
 # ── First line: Model + Project + Branch + Git Status ──
 first_line="${CYAN}[${model}]${RESET} 📁 ${proj_name}"
-if [ -n "$branch" ]; then
+if [[ -n "$branch" ]]; then
   first_line="${first_line} | 🌿 ${CYAN}${branch}${RESET} ${git_status_output}"
 fi
 echo -e "$first_line"
 
 # ── Second line: Progress bar + Percentage + Cost + Duration ──
-if [ -n "$used_pct" ]; then
+if [[ -n "$used_pct" ]]; then
   used_int=$(printf "%.0f" "$used_pct")
 
   # Color based on usage
-  if [ "$used_int" -ge 90 ]; then
+  if [[ "$used_int" -ge 90 ]]; then
     bar_color="$RED"
-  elif [ "$used_int" -ge 70 ]; then
+  elif [[ "$used_int" -ge 70 ]]; then
     bar_color="$YELLOW"
   else
     bar_color="$GREEN"
@@ -113,19 +117,13 @@ if [ -n "$used_pct" ]; then
   filled=$(( (used_int * bar_width + 99) / 100 ))
   empty=$((bar_width - filled))
 
-  bar=""
-  for ((i=0; i<filled; i++)); do
-    bar="${bar}█"
-  done
-  for ((i=0; i<empty; i++)); do
-    bar="${bar}░"
-  done
+  bar="$(printf '%*s' "$filled" '' | tr ' ' '█')$(printf '%*s' "$empty" '' | tr ' ' '░')"
 
   # Format cost
   cost_fmt=$(printf "$%.2f" "$total_cost")
 
   # Format duration
-  if [ "$duration_ms" -gt 0 ]; then
+  if [[ "$duration_ms" -gt 0 ]]; then
     mins=$((duration_ms / 60000))
     secs=$(((duration_ms % 60000) / 1000))
     duration_fmt="${mins}m ${secs}s"
@@ -137,16 +135,14 @@ if [ -n "$used_pct" ]; then
   echo -e "$second_line"
 fi
 
-# ── Worktree colors (独立于第一行的颜色方案) ──
-BLUE=$(printf '\033[34m')
-MAGENTA=$(printf '\033[35m')
+# ── Worktree colors (defined above) ──
 
 # ── Worktree List (从第三行开始输出) ──
 worktree_output=""
 
-if [ -n "$current_dir" ] && git rev-parse --git-dir >/dev/null 2>&1 -C "$current_dir"; then
+if [[ -n "$current_dir" ]] && git rev-parse --git-dir >/dev/null 2>&1 -C "$current_dir"; then
   # Use cached worktree_list from earlier (only one git invocation total)
-  if [ -n "$worktree_list" ]; then
+  if [[ -n "$worktree_list" ]]; then
     # Get main worktree path and normalize for .worktrees root detection
     main_worktree_path=$(echo "$worktree_list" | grep "^worktree" | head -1 | sed 's/^worktree //')
     # Replace backslashes with forward slashes using bash parameter expansion (no subshell)
@@ -177,7 +173,7 @@ if [ -n "$current_dir" ] && git rev-parse --git-dir >/dev/null 2>&1 -C "$current
     done <<< "$worktree_list"
 
     # If we found worktrees, output the list
-    if [ "$worktree_index" -gt 0 ]; then
+    if [[ "$worktree_index" -gt 0 ]]; then
       echo -e " Worktrees:"
       echo -ne "$worktree_output"
     fi

@@ -79,15 +79,17 @@ ensure_git_repo
 BASE_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's/refs\/remotes\/origin\///') || BASE_BRANCH="main"
 
 # 检查是否有未合并到 base 分支的提交
-if [[ "$FORCE" = false ]] && git log "$BASE_BRANCH..$BRANCH_NAME" --oneline -n 1 >/dev/null 2>&1; then
-    # 有未合并提交，显示内容并退出
-    echo "⚠️  检测到未合并的提交:"
-    git log "$BASE_BRANCH..$BRANCH_NAME" --oneline 2>/dev/null
-    echo ""
-    echo "请使用 --force 参数强制删除"
-    exit 1
-elif [[ "$FORCE" = true ]] && git log "$BASE_BRANCH..$BRANCH_NAME" --oneline -n 1 >/dev/null 2>&1; then
-    echo "⚠️  警告: 继续删除未合并的提交"
+if git log "$BASE_BRANCH..$BRANCH_NAME" --oneline -n 1 >/dev/null 2>&1; then
+    # 有未合并提交
+    if [[ "$FORCE" = false ]]; then
+        echo "⚠️  检测到未合并的提交:"
+        git log "$BASE_BRANCH..$BRANCH_NAME" --oneline 2>/dev/null
+        echo ""
+        echo "请使用 --force 参数强制删除"
+        exit 1
+    else
+        echo "⚠️  警告: 继续删除未合并的提交"
+    fi
 fi
 
 #-------------------------------------------------------------------------------

@@ -13,7 +13,6 @@
 #-------------------------------------------------------------------------------
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-PROJECT_ROOT=$(pwd)
 . "$SCRIPT_DIR/lib/common.sh"
 
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
@@ -101,8 +100,7 @@ fi
 
 echo "📝 Step 1: Rebase 任务分支 ($TASK_BRANCH) 到 $MERGE_BRANCH..."
 
-cd "$TASK_PATH"
-git rebase "$MERGE_BRANCH"
+git -C "$TASK_PATH" rebase "$MERGE_BRANCH"
 REBASE_EXIT=$?
 
 if [[ $REBASE_EXIT -ne 0 ]]; then
@@ -111,7 +109,6 @@ if [[ $REBASE_EXIT -ne 0 ]]; then
     exit $REBASE_EXIT
 fi
 
-cd "$PROJECT_ROOT"
 echo "✅ Rebase 完成"
 echo
 
@@ -121,8 +118,7 @@ echo
 
 echo "🔀 Step 2: Merge 任务分支 ($TASK_BRANCH) 到 $MERGE_BRANCH..."
 
-cd "$MERGE_PATH"
-git merge --ff-only "$TASK_BRANCH"
+git -C "$MERGE_PATH" merge --ff-only "$TASK_BRANCH"
 MERGE_EXIT=$?
 
 if [[ $MERGE_EXIT -ne 0 ]]; then
@@ -131,7 +127,6 @@ if [[ $MERGE_EXIT -ne 0 ]]; then
     exit $MERGE_EXIT
 fi
 
-cd "$PROJECT_ROOT"
 echo "✅ Merge 完成"
 echo
 
