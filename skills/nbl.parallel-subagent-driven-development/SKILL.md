@@ -31,24 +31,58 @@ Execute plan by dispatching fresh subagent per task. Each implementer performs b
 
 ### 1. Worktree Setup (MANDATORY)
 
-Before starting any levels:
+**Typical Usage Pattern (our convention):**
+> User ALWAYS starts Claude Code in the **main working tree** (primary worktree). The skill creates the isolated merge worktree, user doesn't manually cd into worktrees to start Claude Code.
+
+**Check Process (step-by-step):**
+
+1. **Check if we are in the primary (main) working tree or an added worktree:**
+   ```bash
+   # If .git is a file → inside an added worktree
+   # If .git is a directory → inside primary working tree (NOT inside any added worktree)
+   if [ -f ".git" ]; then
+     INSIDE_ADDED_WORKTREE=true
+   else
+     INSIDE_ADDED_WORKTREE=false
+   fi
+   ```
+
+2. **If already inside an added worktree:**
+   - This means user manually cd here and started Claude Code inside the worktree
+   - GATE 1 passes, proceed directly to create merge worktree from current branch
+
+3. **If in primary working tree (normal case for our usage pattern):**
+   - Check current branch:
+     ```bash
+     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+     if [[ "$CURRENT_BRANCH" == "main" || "$CURRENT_BRANCH" == "master" ]]; then
+       # On main/master → MUST auto-create a development branch (feature/bugfix based on plan name)
+       # 1. Create development branch from main/master
+       # 2. Checkout the new development branch in the primary working tree
+       # 3. Invoke `nbl.using-git-worktrees` to create ONE merge worktree from this development branch
+     else
+       # Already on a feature/bugfix development branch → invoke `nbl.using-git-worktrees` directly
+       # The merge worktree will branch from this existing development branch
+     fi
+     ```
+
+**Result after setup:**
 ```
-- If on main/master branch → AUTO-create development branch (feature/bugfix based on plan name)
-- Invoke **nbl.using-git-worktrees** skill to create ONE merge worktree from development branch:
-  - Base name: `<name>-merge`
-  - Branch: `feature/{name}-merge`
-  - Path: `.worktrees/{name}-merge/`
+- Base name: `<name>-merge`
+- Branch: `feature/{name}-merge`
+- Path: `.worktrees/{name}-merge/`
 - All subsequent task worktrees will be created from this merge worktree
 ```
 
 **Key difference from previous design:**
-- Create ONE top-level merge worktree at startup
+- Create ONE top-level merge worktree at startup from the development branch
 - Each task in each level creates its own isolated worktree from merge worktree
 - After each task completes, it's merged back to merge worktree and the task worktree is cleaned up
 - No top-level worktree needed before starting - only the merge worktree
 
 **Never:** Dispatch implementer on main/master branch without worktree isolation
 **Never:** Create worktree with direct `git worktree add` - always use **nbl.using-git-worktrees** skill to create worktrees (skill handles correct path calculation)
+**MUST:** complete setup before any task dispatching, NO exceptions
 
 ### 2. TDD Required (MANDATORY)
 

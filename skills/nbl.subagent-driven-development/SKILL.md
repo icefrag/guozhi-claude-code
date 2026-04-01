@@ -47,12 +47,42 @@ Before any task execution, these gates MUST pass:
   - Check if current directory is a Git repository
   - If **NOT** a Git repository → **STOP immediately** and tell the user:
     > "Error: nbl.subagent-driven-development requires a Git repository. Please run `git init` to initialize a repository, then retry."
-- MUST run in a git worktree (never main/master branch)
-- If not in worktree:
-  - On main/master (already a Git repository):
-    - **auto-create development branch** (feature/bugfix based on plan name), checkout main worktree to it, then create worktree
-  - On feature/bugfix dev branch → invoke `nbl.using-git-worktrees` to create isolated worktree
-- No exceptions
+**Typical Usage Pattern (our convention):**
+> User ALWAYS starts Claude Code in the **main working tree** (primary worktree). The skill creates the isolated worktree, user doesn't manually cd into worktrees to start Claude Code.
+
+**Check Process (step-by-step):**
+
+1. **Check if we are in the primary (main) working tree or an added worktree:**
+   ```bash
+   # If .git is a file → inside an added worktree
+   # If .git is a directory → inside primary working tree (NOT inside any added worktree)
+   if [ -f ".git" ]; then
+     INSIDE_ADDED_WORKTREE=true
+   else
+     INSIDE_ADDED_WORKTREE=false
+   fi
+   ```
+
+2. **If already inside an added worktree:**
+   - This means user manually cd here and started Claude Code inside the worktree
+   - GATE 1 passes, proceed directly to GATE 2
+
+3. **If in primary working tree (normal case for our usage pattern):**
+   - Check current branch:
+     ```bash
+     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+     if [[ "$CURRENT_BRANCH" == "main" || "$CURRENT_BRANCH" == "master" ]]; then
+       # On main/master → MUST auto-create a development branch (feature/bugfix based on plan name)
+       # 1. Create development branch from main/master
+       # 2. Checkout the new development branch in the primary working tree
+       # 3. Invoke `nbl.using-git-worktrees` to create isolated worktree from this development branch
+     else
+       # Already on a feature/bugfix development branch → invoke `nbl.using-git-worktrees` directly
+       # The created worktree will branch from this existing development branch
+     fi
+     ```
+
+**MUST create isolated worktree before starting implementation, NO exceptions.**
 
 **GATE 2: Test-Driven Development**
 - All implementation MUST follow TDD: write failing test → implement → verify pass
