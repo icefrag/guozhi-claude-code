@@ -90,15 +90,23 @@ else
         IS_NEW=false
         MESSAGE="Reused existing worktree"
     elif branch_exists "$BRANCH_NAME"; then
-        # Case 2: 分支存在但目录不存在 → 重新 attach
+        # Case 2: 分支存在但目录不存在 → 尝试重新 attach
         echo "🔗 分支已存在，重新 attach worktree"
-        if git worktree add "$WORKTREE_PATH" "$BRANCH_NAME"; then
+        ATTACH_ERROR=$(git worktree add "$WORKTREE_PATH" "$BRANCH_NAME" 2>&1) && ATTACH_RC=$? || ATTACH_RC=$?
+        if [[ $ATTACH_RC -eq 0 ]]; then
             echo "✅ Re-attach 成功"
             IS_NEW=false
             MESSAGE="Re-attached existing worktree"
+        elif echo "$ATTACH_ERROR" | grep -q "already used by worktree"; then
+            # 分支已被主 worktree 检出，无法创建隔离 worktree
+            echo "⚠️  分支 '$BRANCH_NAME' 已被当前 worktree 检出"
+            echo "💡 Git 不允许同一分支同时被多个 worktree 检出"
+            echo "💡 建议：直接在当前 worktree 的分支上继续开发，无需创建隔离 worktree"
+            [[ -n "$OUTPUT_FILE" ]] && output_error_json "$OUTPUT_FILE" "Branch already checked out in current worktree, use current workspace directly"
+            exit 1
         else
-            echo "❌ 重新 attach 失败"
-            [[ -n "$OUTPUT_FILE" ]] && output_error_json "$OUTPUT_FILE" "Failed to re-attach existing worktree"
+            echo "❌ 重新 attach 失败: $ATTACH_ERROR"
+            [[ -n "$OUTPUT_FILE" ]] && output_error_json "$OUTPUT_FILE" "Failed to re-attach: $ATTACH_ERROR"
             exit 1
         fi
     else
