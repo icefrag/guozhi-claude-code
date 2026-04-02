@@ -118,6 +118,15 @@ if [[ -d "$WORKTREE_PATH" ]]; then
         exit 1
     fi
     echo "✅ Worktree 已删除"
+    # Windows 兼容处理：git worktree remove 有时因文件锁定无法删除空目录，手动再删一次
+    if [[ -d "$WORKTREE_PATH" ]]; then
+        echo "🧹 清理残留空目录..."
+        rmdir "$WORKTREE_PATH" 2>/dev/null || true
+        # 如果 rmdir 失败，尝试强制删除
+        if [[ -d "$WORKTREE_PATH" ]]; then
+            rm -rf "$WORKTREE_PATH" 2>/dev/null || true
+        fi
+    fi
 else
     echo "📂 Worktree 目录不存在，跳过删除"
 fi
