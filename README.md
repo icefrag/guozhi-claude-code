@@ -155,6 +155,9 @@ skills/
 ├── nbl.update-rules/                # 规则文件管理
 ├── nbl.writing-skills/              # 技能开发工具
 └── nbl.test-driven-development/     # 测试驱动开发
+
+rules/
+└── common/                          # 开发规范规则集（示例管理，需手动拷贝到 ~/.claude/rules/ 生效）
 ```
 
 ---
