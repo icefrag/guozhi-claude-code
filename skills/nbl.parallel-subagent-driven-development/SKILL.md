@@ -156,9 +156,9 @@ def analyze_plan(plan):
 
 ```
 Level 0: Task 1, Task 3      # No dependencies
-        ↓
+    ↓
 Level 1: Task 2, Task 4      # Depends on Level 0
-        ↓
+    ↓
 Level 2: ...                  # Depends on Level 1
 ```
 
@@ -181,6 +181,18 @@ For each level:
     └── Proceed to next level
 ```
 
+### Per-Task Rebase + Merge Process
+
+For each completed agent:
+
+1. **Implementer completes:** implement → spec self-check → fix → quality self-check → fix → DONE
+2. **Rebase + Merge + Cleanup** - Invoke `nbl.using-git-worktrees` skill:
+   ```
+   /nbl.superpowers:nbl.using-git-worktrees merge-sub <base_name> <task_id>
+   ```
+   > ⚠️ **NON-NEGOTIABLE**: The merge **must** happen inside the merge worktree. The merge branch is already checked out there — do NOT attempt `git checkout $merge_branch` in the main workspace (Git forbids checking out the same branch in two worktrees simultaneously).
+3. **Keep branch** - Branch deletion is handled by `finishing-a-development-branch` after all tasks complete
+
 ### Level Completion Criteria
 
 **All tasks must complete ALL steps before next level:**
@@ -200,68 +212,6 @@ If any task fails at any step:
 1. **Level is blocked** — do NOT proceed to next level
 2. **Fix the failing task** — implementer fixes, re-review if needed
 3. **Resume once all tasks pass** — then proceed to next level
-
-## Pipeline Execution
-
-This section documents the detailed flow for multi-task levels. See "The Process" diagram above for the unified view.
-
-### Pipeline Flow (New Design)
-
-```dot
-digraph pipeline_flow {
-    rankdir=TB;
-
-    subgraph cluster_setup {
-        label="Setup (Once at Start)";
-        style=filled fillcolor=lightyellow;
-        "Create merge worktree via nbl.using-git-worktrees" [shape=box];
-    }
-
-    subgraph cluster_level {
-        label="For Each Level";
-        style=filled fillcolor=lightblue;
-        "Create task worktrees via nbl.using-git-worktrees (<base_name>, <task_id>)" [shape=box];
-        "Dispatch N implementers (parallel)" [shape=box];
-    }
-
-    subgraph cluster_process {
-        label="Process Each Completion (Sequential)";
-        style=filled fillcolor=lightyellow;
-        "Wait for ANY agent to complete" [shape=diamond];
-        "Implementer reports DONE (self-review passed)" [shape=box];
-        "Rebase task branch to merge branch" [shape=box];
-        "Merge task branch to merge branch (in main workspace)" [shape=box];
-        "Cleanup task worktree" [shape=box];
-        "More agents pending?" [shape=diamond];
-    }
-
-    "Create merge worktree via nbl.using-git-worktrees" -> "Create task worktrees via nbl.using-git-worktrees (<base_name>, <task_id>)";
-    "Create task worktrees via nbl.using-git-worktrees (<base_name>, <task_id>)" -> "Dispatch N implementers (parallel)";
-    "Dispatch N implementers (parallel)" -> "Wait for ANY agent to complete";
-    "Wait for ANY agent to complete" -> "Implementer reports DONE (self-review passed)";
-    "Implementer reports DONE (self-review passed)" -> "Rebase task branch to merge branch";
-    "Rebase task branch to merge branch" -> "Merge task branch to merge branch (in main workspace)";
-    "Merge task branch to merge branch (in main workspace)" -> "Cleanup task worktree";
-    "Cleanup task worktree" -> "More agents pending?";
-    "More agents pending?" -> "Wait for ANY agent to complete" [label="yes"];
-    "More agents pending?" -> "Level complete" [label="no"];
-}
-```
-
-### Per-Task Rebase + Merge Process (in merge worktree model)
-
-For each completed agent:
-
-1. **Implementer completes:** implement → spec self-check → fix → quality self-check → fix → DONE
-2. **Rebase + Merge + Cleanup** - Invoke `nbl.using-git-worktrees` skill:
-   ```
-   /nbl.superpowers:nbl.using-git-worktrees merge-sub <base_name> <task_id>
-   ```
-   > ⚠️ **NON-NEGOTIABLE**: The merge **must** happen inside the merge worktree. The merge branch is already checked out there — do NOT attempt `git checkout $merge_branch` in the main workspace (Git forbids checking out the same branch in two worktrees simultaneously).
-
-3. **Keep branch** - Branch deletion is handled by `finishing-a-development-branch` after all tasks complete
-
-### Failure Handling
 
 | Scenario | Action |
 |----------|--------|
