@@ -5,38 +5,6 @@
 同时整合了 [everything-claude-code](https://github.com/affaan-m/everything-claude-code) 项目中精选的实用技能，如 `/refactor-clean` 死代码清理、`/test-coverage` 测试覆盖率分析
 ---
 
-## 🛠 运行机制
-
-### 核心设计思想
-
-利用 **Git worktree** 实现物理空间隔离，结合 **subAgent** 实现任务级并行调度，原生支持多个需求同时开发，多个 Claude Code 会话并行工作互不冲突。
-
-### 为什么需要隔离开发？
-
-在传统单工作区开发模式中：
-- 多个未完成任务的代码混在一起，互相干扰
-- 同时打开多个 Claude Code 会话容易产生文件冲突
-- 切换任务需要频繁 `stash`/`unstash`，降低开发效率
-
-### Worktree 空间隔离
-
-`nbl.superpowers` 使用 **Git worktree** 实现开发空间隔离：
-
-- ✅ 每个开发任务创建独立的 worktree 子目录
-- ✅ 不同任务之间代码物理隔离，完全不干扰
-- ✅ 支持同时打开多个 Claude Code 会话，每个会话在不同 worktree 开发不同需求
-- ✅ 开发过程中代码保留在 worktree 子空间，不影响主分支
-- ✅ 开发完成后，人工审核确认，再合并到主开发分支
-
-### SubAgent 任务调度
-
-根据任务依赖关系，支持两种执行模式：
-
-| 模式 | Skill | 说明 | 适用场景 |
-|------|-------|------|----------|
-| **串行模式** | `nbl.subagent-driven-development` | 任务按依赖顺序依次执行，每个任务分配一个 subAgent | 任务之间存在依赖，必须按顺序完成 |
-| **并行模式** | `nbl.parallel-subagent-driven-development` | 多个独立任务同时分配给多个 subAgent 并行执行 | 多个无关任务，可以同时开工，大幅提升效率 |
-
 ### 完整开发生命周期
 
 ```
