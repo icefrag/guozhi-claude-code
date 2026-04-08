@@ -39,6 +39,22 @@ else:
 /plugin install nbl.superpowers@nbl.superpowers
 ```
 
+## 💡 使用示例
+
+```bash
+# 需求澄清与设计阶段 — 把你的需求告诉我，我来帮你生成设计文档
+/nbl.brainstorming 去完成需求描述
+
+# 安装自定义状态栏 — 显示模型、分支、上下文使用率、费用等信息
+/nbl.status-line 安装状态栏
+
+# 死代码清理 — 扫描并清理项目中未使用的无效代码
+/nbl.refactor-clean 执行无效代码清理
+
+# 提升测试覆盖率 — 分析现有测试覆盖率，补充缺失的单元测试到80%以上
+/nbl.test-coverage 补充单测到80%
+```
+
 ---
 
 ## 🔄 更新方式
