@@ -20,7 +20,7 @@ description: Use when writing Java Spring Boot integration tests that perform re
 - **真实写库**：在真实数据库执行 CRUD，不使用 Mock
 - **自动回滚**：`@Transactional` 保证测试结束后数据自动回滚
 - **字段级验证**：新增操作验证所有必填字段都正确写入数据库，每个字段值都需要断言
-- **LambdaQueryWrapper 验证**：使用 MyBatis-Plus 直接查询数据库验证
+- **直接查询验证**：使用项目的 Mapper（如 MyBatis-Plus、TKMapper 等）直接查询数据库验证
 - **多表关联验证**：主表和关联关系表都需要验证
 - **一个方法完成 CRUD**：Create-Read-Update-Delete 在一个测试方法中完成
 
@@ -244,8 +244,8 @@ void testCRUD() throws Exception {
 |------|------|
 | **真实写库** | 不 Mock 数据层，真正写入数据库验证 |
 | **自动回滚** | `@Transactional` 保证测试结束数据回滚 |
-| **DB 验证** | 通过 Mapper 直接查询数据库验证状态 |
-| **LambdaQueryWrapper** | 使用 MyBatis-Plus 构造查询条件 |
+| **DB 验证** | 通过项目的 Mapper 直接查询数据库验证状态 |
+| **不依赖特定 ORM** | 适配各种 Mapper 实现（MyBatis-Plus、TKMapper 等），根据项目技术栈自行调整查询方式 |
 | **时间戳命名** | `System.currentTimeMillis()` 避免数据冲突 |
 | **幂等性** | 可重复运行多次，结果一致 |
 
@@ -263,7 +263,7 @@ void testCRUD() throws Exception {
 
 ### 名称查询说明
 
-- 使用 `System.currentTimeMillis()` 生成唯一名称 + `LambdaQueryWrapper` 查询查找记录，这是插入后验证的可靠方式
+- 使用 `System.currentTimeMillis()` 生成唯一名称 + 按名称 + 租户查询查找记录，这是插入后验证的可靠方式
 - 如果你的 Create 接口返回创建后的 ID，可以直接使用 `selectById` 查询更简单
 
 ### 逻辑删除验证
@@ -321,8 +321,12 @@ private void setTestContext(BaseReq req) {
 
 ## Imports 参考
 
+> **注意**：以下 import 基于 MyBatis-Plus 示例。根据项目使用的 Mapper 框架（如 TKMapper、JPA 等）自行调整查询相关 import。
+
 ```java
+// MyBatis-Plus 查询
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+// Spring 测试
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
