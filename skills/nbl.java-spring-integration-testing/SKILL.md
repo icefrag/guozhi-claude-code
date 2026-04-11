@@ -7,7 +7,14 @@ description: Use when writing Java Spring Boot integration tests that perform re
 
 ## Overview
 
-Java Spring Boot 集成测试最佳实践，使用 `@SpringBootTest` + `@AutoConfigureMockMvc` + `@Transactional` 组合执行真实数据库 CRUD 操作，测试结束后自动回滚保证幂等性。
+> **背景**：管理功能（如部门、用户、角色、配置等）的核心是 CRUD 操作。这些功能的特殊性在于：
+> - **多表关联**：主表 + 多种关联关系表（人员关系、业务关系等）
+> - **数据持久化**：需要验证数据真正写入数据库，而不仅是 HTTP 响应
+> - **回归风险高**：修改后需要确保已有功能不受影响
+>
+> 本 skill 提供一套经过验证的集成测试模式，覆盖以上场景。
+
+使用 `@SpringBootTest` + `@AutoConfigureMockMvc` + `@Transactional` 组合执行真实数据库 CRUD 操作，测试结束后自动回滚保证幂等性。
 
 核心特点：
 - **真实写库**：在真实数据库执行 CRUD，不使用 Mock
@@ -19,10 +26,10 @@ Java Spring Boot 集成测试最佳实践，使用 `@SpringBootTest` + `@AutoCon
 ## When to Use
 
 Use when:
-- 需要验证 Controller 层完整业务流程
-- 需要验证数据库写入操作正确性（包括关联表）
+- 编写管理功能的 CRUD 集成测试（部门、用户、角色、配置等）
+- 需要验证数据库写入操作正确性（包括主表 + 关联表）
+- 确保管理功能的增删改查正常工作
 - 希望测试可重复运行（幂等性）
-- 使用 MyBatis-Plus 作为 ORM 框架
 
 When NOT to Use:
 - 单元测试（只测单个方法逻辑）→ use nbl.test-driven-development
