@@ -19,6 +19,7 @@ description: Use when writing Java Spring Boot integration tests that perform re
 核心特点：
 - **真实写库**：在真实数据库执行 CRUD，不使用 Mock
 - **自动回滚**：`@Transactional` 保证测试结束后数据自动回滚
+- **字段级验证**：新增操作验证所有必填字段都正确写入数据库，每个字段值都需要断言
 - **LambdaQueryWrapper 验证**：使用 MyBatis-Plus 直接查询数据库验证
 - **多表关联验证**：主表和关联关系表都需要验证
 - **一个方法完成 CRUD**：Create-Read-Update-Delete 在一个测试方法中完成
@@ -274,6 +275,18 @@ void testCRUD() throws Exception {
 
 - 不仅验证主表，还要验证所有关联表（关系表）
 - 创建、更新、删除都需要验证关联表变化
+
+### 新增操作字段验证
+
+- **必须验证所有必填字段**写入数据库后值正确
+- 不能只验证 HTTP 状态码，必须通过数据库查询验证每个字段
+- 示例：
+```java
+assertEquals(childName, childDept.getName());
+assertEquals(TEST_TENANT_ID, childDept.getTenantId());
+assertEquals(DepartmentTypeEnum.TEACHING_RESEARCH_GROUP, childDept.getDeptType());
+assertEquals(parentDept.getId(), childDept.getParentId(), "子部门parentId错误");
+```
 
 ## Best Practices for Reducing Boilerplate
 
