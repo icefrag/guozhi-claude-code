@@ -48,7 +48,7 @@ STEP 4: If INSIDE_ADDED_WORKTREE = NO (in primary working tree):
     2. Checkout new development branch in primary working tree
 
   // CRITICAL: This step executes for BOTH main/master AND development branches!
-  INVOKE: `/nbl.superpowers:nbl.using-git-worktrees create <base-name-merge>`
+  INVOKE: `/nbl.superpowers:nbl.using-git-worktrees create <base-name>-merge --parent feature/<base-name>`
   // After invocation, you will be inside the newly created merge worktree
   → Setup complete, proceed to read plan and analyze dependencies
 ```
@@ -97,6 +97,7 @@ For each level:
     ├── Create worktrees for tasks in this level (max 2 per batch)
     │   For each task, invoke **nbl.using-git-worktrees** skill with:
     │   - Base name: `<base_name>`
+    │   - Parent branch: `feature/<base_name>-merge`
     │   - Task id: `<task_id>`
     │   Skill handles correct path calculation automatically: `.worktrees/{base}-task{id}`
     ├── Dispatch agents in parallel
