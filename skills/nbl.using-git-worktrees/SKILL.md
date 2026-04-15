@@ -19,7 +19,7 @@ Invoke via skill command:
 
 | Operation | Command |
 |-----------|---------|
-| Create | `/nbl.superpowers:nbl.using-git-worktrees create <base_name> [task_id]` |
+| Create | `/nbl.superpowers:nbl.using-git-worktrees create <base_name> [--parent <branch>] [task_id]` |
 | Cleanup | `/nbl.superpowers:nbl.using-git-worktrees cleanup <base_name> [task_id] [--force]` |
 | Sub-to-sub Merge (parallel mode) | `/nbl.superpowers:nbl.using-git-worktrees merge-sub <base_name> <task_id>` |
 
