@@ -85,7 +85,7 @@ STEP 4: If INSIDE_ADDED_WORKTREE = NO (in primary working tree):
     2. Checkout new development branch in primary working tree
 
   // CRITICAL: This step executes for BOTH main/master AND development branches!
-  INVOKE: `/nbl.superpowers:nbl.using-git-worktrees create <base-name-from-plan>`
+  INVOKE: `/nbl.superpowers:nbl.using-git-worktrees create <base-name-from-plan>-work --parent feature/<base-name-from-plan>`
   // After invocation, you will be inside the newly created worktree
   → GATE 1 PASSED → proceed to GATE 2
 ```
