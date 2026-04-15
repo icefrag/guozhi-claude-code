@@ -1,3 +1,10 @@
+---
+paths:
+  - "**/*.java"
+  - "**/*.sql"
+  - "**/*.xml"
+---
+
 # 开发规范
 
 > Java Spring Boot项目的编码规范、数据持久化规范、工具类使用规范等。
@@ -237,6 +244,13 @@ private Date createTime;
 
 - **禁止**: Controller层方法内手动打印请求进入日志和请求完成日志
 - **允许**: 异常处理时的调试日志、业务关键节点的日志、性能监控日志
+
+## MQ 命名规范 (NON-NEGOTIABLE)
+
+- **Queue 命名**: 使用`guozhi_v2`作为前缀，格式`guozhi_v2_{业务描述}_queue`
+  - 示例：`guozhi_v2_third_auth_event_queue`
+- **RoutingKey 命名**: 使用`guozhi.edu`作为前缀，格式`guozhi.edu.{业务描述}`
+  - 示例：`guozhi.edu.tenant.lifecycle`
 
 ## 事件发布规范 (NON-NEGOTIABLE)
 
