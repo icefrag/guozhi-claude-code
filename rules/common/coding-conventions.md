@@ -240,6 +240,29 @@ private Date createTime;
   - `requiredMode`: 根据JSR-303校验注解确定
   - 禁止使用已废弃的`required`属性
 
+## 非BFF服务 Req对象上下文字段规范 (NON-NEGOTIABLE)
+
+- **适用范围**: 除 `guozhi-edu-app` 和 `guozhi-ops-app`（BFF层）以外的所有内部微服务
+- **上下文字段**: `tenantId`、`operatorId`
+- **必须**: 这些字段在Req对象中设置为非必填，不添加JSR-303校验注解（如 `@NotNull`、`@NotBlank`）
+- **必须**: 这些字段添加 `@Schema(hidden = true)` 注解，不在Swagger文档中暴露
+- **原因**: 非BFF服务通过Feign内部调用接收上下文信息，由调用方透传，不暴露给外部
+
+```java
+// 正确：非BFF服务的Req对象
+@Schema(description = "创建课程请求")
+public class CreateCourseReq {
+    @Schema(description = "课程名称", example = "数学")
+    private String name;
+
+    @Schema(hidden = true)
+    private Long tenantId;
+
+    @Schema(hidden = true)
+    private Long operatorId;
+}
+```
+
 ## Controller日志规范 (NON-NEGOTIABLE)
 
 - **禁止**: Controller层方法内手动打印请求进入日志和请求完成日志
