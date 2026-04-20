@@ -73,6 +73,36 @@ $ARGUMENTS
 - 避免尾部空格
 - 保留 "NON-NEGOTIABLE" 标记
 
+## 规则精简原则
+
+- 每条规则用一句话说清楚「做什么」和「禁止什么」，去掉解释性铺垫
+- 禁止「错误示例」代码块，只保留最简「正确示例」（1-3行）
+- 禁止重复已在 CLAUDE.md 中声明的信息，用引用代替
+- 表格仅用于枚举型数据（字段列表、映射关系），简单规则用列表
+
+### 反向示例（禁止）
+
+```markdown
+## Spring依赖注入规范 (NON-NEGOTIABLE)
+
+- **推荐方式**: 使用Lombok的`@RequiredArgsConstructor`注解配合`final`字段实现构造器注入
+- **禁止**: 使用`@Autowired`字段注入、使用`@Resource`字段注入
+- **适用范围**: 所有Spring管理的Bean，包括Controller、Service、Manager、Job等
+- **必选依赖**: 所有需要注入的依赖必须声明为`final`字段
+
+// 正确示例（完整类骨架）
+// 错误示例（完整类骨架）
+```
+
+### 正向示例（推荐）
+
+```markdown
+## Spring依赖注入
+
+- 使用`@RequiredArgsConstructor` + `final`字段，禁止`@Autowired`/`@Resource`
+- 适用：所有Spring Bean（Controller、Service、Manager、Job等）
+```
+
 ## 使用示例
 
 ```
