@@ -151,6 +151,10 @@ if (ids == null || ids.isEmpty()) { return Collections.emptyList(); }
 
 - Controller和FeignClient禁止`@PathVariable`，统一用`@RequestParam`
 
+## HTTP请求方法
+
+- 查询方法用GET，增删改用POST
+
 ## 日期时间格式
 
 - 统一使用`java.util.Date`，禁止String/LocalDateTime
