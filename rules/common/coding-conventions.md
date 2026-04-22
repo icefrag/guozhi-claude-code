@@ -117,6 +117,19 @@ if (ids == null || ids.isEmpty()) { return Collections.emptyList(); }
 - `of()`/`getDescByCode()`/`getCodeByDesc()`
 - 禁止枚举类内部手写静态方法遍历values()
 
+## 字符串判空
+
+- 使用`StrUtil.isBlank()`，禁止`!= null && !isEmpty()`组合判断
+- 路径：`cn.hutool.core.util.StrUtil`
+
+```java
+// 禁止
+if (str != null && !str.isEmpty())
+
+// 推荐
+if (StrUtil.isBlank(str))
+```
+
 ## 禁止魔术数字
 
 - 查询条件中的type/status/enabled等值必须使用枚举常量
