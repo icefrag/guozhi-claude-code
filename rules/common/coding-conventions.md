@@ -82,18 +82,6 @@ default UserEntity selectByGzId(String gzId) {
 }
 ```
 
-## ID查询无需租户隔离
-
-- 通过主键ID/ID集合查询时，禁止附加tenantId条件（ID全局唯一）
-
-```java
-default List<GeneralQuality> selectByIds(List<Long> ids) {
-    if (ids == null || ids.isEmpty()) { return Collections.emptyList(); }
-    return selectList(new LambdaQueryWrapper<GeneralQuality>()
-            .in(GeneralQuality::getId, ids));
-}
-```
-
 ## 集合参数查询
 
 - Mapper层`.in()`必须先检查集合是否为null或empty，否则MyBatis-Plus会生成无效SQL
