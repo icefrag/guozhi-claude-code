@@ -21,6 +21,12 @@ public class UserController implements UserApi {
 }
 ```
 
+## 依赖管理原则 (NON-NEGOTIABLE)
+
+- **版本集中定义**: 所有第三方依赖版本必须在父 pom 的 `<properties>` 和 `<dependencyManagement>` 中集中定义
+- **子模块禁止指定版本**: 子模块引用第三方依赖时禁止直接指定版本号（由父 pom 统一管理）
+- **例外**: 仅有版本管理的 starter 依赖（如 spring-boot-starter）可由子模块声明版本
+
 ## Lombok @Builder
 
 - 所有实体对象（Entity、DTO、Req、Resp、Query等）使用@Builder时，必须同时添加`@AllArgsConstructor`和`@NoArgsConstructor`
