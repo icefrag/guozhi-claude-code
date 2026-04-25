@@ -82,6 +82,16 @@ default UserEntity selectByGzId(String gzId) {
 }
 ```
 
+- 表中含tenantId时，按ID查询必须同时过滤tenantId
+
+```java
+default UserEntity selectByIdAndTenantId(Long id, Long tenantId) {
+    return selectOne(new LambdaQueryWrapper<UserEntity>()
+        .eq(UserEntity::getId, id)
+        .eq(UserEntity::getTenantId, tenantId));
+}
+```
+
 ## 集合参数查询
 
 - Mapper层`.in()`必须先检查集合是否为null或empty，否则MyBatis-Plus会生成无效SQL
@@ -175,7 +185,7 @@ if (StrUtil.isBlank(str))
 ## 非BFF服务Req上下文字段
 
 - 适用：除guozhi-edu-app和guozhi-ops-app以外的所有内部微服务
-- tenantId/operatorId：不设JSR-303校验，加`@Schema(hidden = true)`
+- tenantId/operatorId：加`@Schema(hidden = true)` + `@NotNull`
 
 ## Controller日志
 
