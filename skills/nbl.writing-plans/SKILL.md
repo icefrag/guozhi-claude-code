@@ -57,6 +57,10 @@ This structure informs the task decomposition. Each task should produce self-con
 
 **Tech Stack:** [Key technologies/libraries]
 
+## Global Constraints
+
+[规格说明里的项目级硬性要求 —— 版本下限、依赖上限、命名/文案约定、平台要求 —— 一行一条，数值原样从规格复制。每个 task 的需求隐式包含本节。]
+
 ---
 ```
 
@@ -73,6 +77,8 @@ Each task MUST include dependency information for parallel execution planning:
 **Parallelizable:** `Yes` | `No (reason)`
 - `Yes` - Task can run in parallel with other independent tasks
 - `No (reason)` - Task must wait for dependencies, explain why
+
+**注意**：每个 task 的 requirements 隐式包含 `## Global Constraints` 列出的全部全局规则（版本下限、依赖上限、命名/文案约定、平台要求），不要在 task 内重复列举。
 
 ## Task Structure
 
