@@ -128,7 +128,7 @@ digraph process {
     "Implementer asks questions?" [shape=diamond];
     "Answer questions, provide context" [shape=box];
     "Implementer: implement → spec self-check → fix → quality self-check → fix → DONE" [shape=box];
-    "Mark task complete (TodoWrite + Plan file)" [shape=box];
+    "Mark task complete (TodoWrite + Ledger)" [shape=box];
     "Global Stage 1: Spec review (all merged changes)" [shape=box];
     "Spec review passes?" [shape=diamond];
     "Dispatch fix agent for spec issues" [shape=box];
@@ -153,8 +153,8 @@ digraph process {
     "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (with built-in two-stage review)";
     "Implementer asks questions?" -> "Implementer: implement → spec self-check → fix → quality self-check → fix → DONE" [label="no"];
-    "Implementer: implement → spec self-check → fix → quality self-check → fix → DONE" -> "Mark task complete (TodoWrite + Plan file)";
-    "Mark task complete (TodoWrite + Plan file)" -> "More tasks remain?";
+    "Implementer: implement → spec self-check → fix → quality self-check → fix → DONE" -> "Mark task complete (TodoWrite + Ledger)";
+    "Mark task complete (TodoWrite + Ledger)" -> "More tasks remain?";
     "More tasks remain?" -> "Global Stage 1: Spec review (all merged changes)" [label="no"];
     "Global Stage 1: Spec review (all merged changes)" -> "Spec review passes?";
     "Spec review passes?" -> "Dispatch fix agent for spec issues" [label="no"];
@@ -190,9 +190,9 @@ Use the least powerful model that can handle each role to conserve cost and incr
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Implementer completed the work **and** passed built-in two-stage self-review with all issues fixed. **Mark task complete in both TodoWrite and the plan file (update the checkbox from `[ ]` to `[x]`)**, then proceed to next task.
+**DONE:** Implementer completed the work **and** passed built-in two-stage self-review with all issues fixed. **Mark task complete in TodoWrite, and append a line to .nbl/sdd/progress.md (see Durable Progress section below)**, then proceed to next task.
 
-**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before moving on. If they're observations (e.g., "this file is getting large"), note them and **mark task complete in both TodoWrite and the plan file**.
+**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before moving on. If they're observations (e.g., "this file is getting large"), note them and **mark task complete in TodoWrite, and append to .nbl/sdd/progress.md**.
 
 **NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
 
@@ -203,6 +203,39 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 4. If the plan itself is wrong, escalate to the human
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
+
+## Durable Progress (Progress Ledger)
+
+长任务遭遇上下文压缩后，靠 `.nbl/sdd/progress.md`（git-ignored scratch）恢复执行位置，**不信任自己的回忆**。
+
+### 初始化（每个 worktree 首次执行 SDD 时）
+
+```bash
+mkdir -p .nbl/sdd && printf '*\n' > .nbl/sdd/.gitignore
+```
+
+该目录自忽略，不污染 `git status`、不会被误提交。注意：`git clean -fdx` 会清掉它，可从 `git log` 重建。
+
+### 追加时机
+
+每个 task 的 implementer 自审通过（Stage 1 Spec + Stage 2 Quality 均 PASSED/FIXED）、controller 标完成时，**在同一消息里**追加一行到 `.nbl/sdd/progress.md`：
+
+```
+Task N: complete (commits <base7>..<head7>, self-review clean)
+```
+
+- `<base7>` / `<head7>`：dispatch implementer 之前记录的 BASE 与 implementer 完成后的 HEAD，各取 `git rev-parse --short` 的 7 位短 SHA。**绝不用 `HEAD~1`**——多提交的 task 会静默丢失。
+- `self-review clean`：对应 implementer 报告里 "Built-in Two-Stage Review Results" 两段均为 PASSED 或 FIXED。
+
+### 恢复流程
+
+skill 启动 / 上下文压缩后恢复时：
+
+```bash
+cat "$(git rev-parse --show-toplevel)/.nbl/sdd/progress.md"
+```
+
+解析每行 `Task N: complete ...` 标记为 DONE 跳过，在第一个未标 complete 的 task 恢复执行。以 ledger + `git log` 为准。
 
 ## Prompt Templates
 
@@ -237,7 +270,7 @@ Implementer: "Got it. Implementing now..."
     - Stage 2 (Code Quality): PASSED
   - Committed
 
-[Mark Task 1 complete in TodoWrite, mark all statuses complete in plan file]
+[Mark Task 1 complete in TodoWrite, append "Task 1: complete (commits <base7>..<head7>, self-review clean)" to .nbl/sdd/progress.md]
 
 Task 2: Recovery modes
 
@@ -253,7 +286,7 @@ Implementer:
     - Stage 2 (Code Quality): FIXED - Extracted magic number 100 to PROGRESS_INTERVAL constant
   - Committed
 
-[Mark Task 2 complete in TodoWrite, mark all statuses complete in plan file]
+[Mark Task 2 complete in TodoWrite, append "Task 2: complete (commits <base7>..<head7>, self-review clean)" to .nbl/sdd/progress.md]
 
 ...
 
