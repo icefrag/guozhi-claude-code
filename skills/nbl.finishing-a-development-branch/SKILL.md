@@ -41,6 +41,25 @@ Stop. Don't proceed to Step 2.
 
 ### Step 2: Determine Execution Mode
 
+**First, detect detached HEAD state** (overrides mode detection — detached HEAD is externally managed):
+
+```bash
+GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
+GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
+HEAD_REF=$(git symbolic-ref -q HEAD || echo "detached")
+
+if [[ "$GIT_DIR" != "$GIT_COMMON" && "$HEAD_REF" == "detached" ]]; then
+  echo "Detached HEAD detected — 走 3 选项菜单（无 merge）。Inline/Serial/Parallel 判定不适用。"
+  # 跳到 Step 4 的 Detached HEAD 分支
+fi
+```
+
+| State | Menu | Cleanup |
+|-------|------|---------|
+| `GIT_DIR == GIT_COMMON`（普通仓库） | 标准 4 选项 | 无 worktree 需清理 |
+| `GIT_DIR != GIT_COMMON`，有名分支 | 标准 4 选项 | 走 `nbl.using-git-worktrees` 清理 |
+| `GIT_DIR != GIT_COMMON`，detached HEAD | 收缩 3 选项（无 merge） | 不清理（外部托管） |
+
 Check which mode produced this branch:
 
 ```bash
@@ -102,6 +121,18 @@ Which option?
 ```
 
 **Don't add explanation** - keep options concise.
+
+**Detached HEAD — present exactly these 3 options:**
+
+```
+Implementation complete. You're on a detached HEAD (externally managed workspace).
+
+1. Push as new branch and create a Pull Request
+2. Keep as-is (I'll handle it later)
+3. Discard this work
+
+Which option?
+```
 
 ### Step 5: Execute Choice
 
@@ -250,6 +281,7 @@ Invoke via: /nbl.using-git-worktrees cleanup <name>-merge --force
 | 2. Create PR | ✓ | - | ✓ | - | - | ✓ (parallel only) |
 | 3. Keep as-is | ✗ | - | - | ✓ | - | - (keep) |
 | 4. Discard | ✗ (no merge) | - | - | - | ✓ (force) | ✓ (parallel only) |
+| Detached HEAD (3 选项) | — (no merge) | — | ✓ (opt 1) | ✓ (opt 2) | — | — |
 
 **Key change (parallel mode):** Merge from merge worktree to development branch only happens after user selects Option 1 or 2. Option 3 keeps everything as-is for later completion.
 
@@ -294,6 +326,10 @@ Invoke via: /nbl.using-git-worktrees cleanup <name>-merge --force
 **No confirmation for discard**
 - **Problem:** Accidentally delete work
 - **Fix:** Require typed "discard" confirmation
+
+**Not handling detached HEAD gracefully**
+- **Problem:** externally managed workspace 处于 detached HEAD 时按 4 选项流程会崩溃
+- **Fix:** 先检测 `GIT_DIR != GIT_COMMON && HEAD detached`，走 3 选项菜单，跳过 worktree 清理
 
 ## Red Flags
 
