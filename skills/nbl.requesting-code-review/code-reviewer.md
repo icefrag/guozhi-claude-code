@@ -32,7 +32,16 @@ git diff --stat {BASE_SHA}..{HEAD_SHA}
 git diff {BASE_SHA}..{HEAD_SHA}
 ```
 
+## Read-Only Review
+
+Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+
 ## Review Checklist
+
+**Plan Alignment:**
+- Does the implementation match the plan / requirements?
+- Are deviations justified improvements, or problematic departures?
+- Is all planned functionality present?
 
 **Code Quality:**
 - Clean separation of concerns?
@@ -64,6 +73,17 @@ git diff {BASE_SHA}..{HEAD_SHA}
 - Backward compatibility considered?
 - Documentation complete?
 - No obvious bugs?
+
+## Calibration
+
+Categorize issues by actual severity. Not everything is Critical.
+Acknowledge what was done well before listing issues — accurate praise
+helps the implementer trust the rest of the feedback.
+
+If you find significant deviations from the plan, flag them specifically
+so the implementer can confirm whether the deviation was intentional.
+If you find issues with the plan itself rather than the implementation,
+say so.
 
 ## Output Format
 
