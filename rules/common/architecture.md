@@ -123,6 +123,13 @@ app/src/main/java/com/guozhi/api/[项目名称]/[业务名称]/
 └── utils/             # 工具类
 ```
 
+### DTO 实体定位规范 (NON-NEGOTIABLE)
+
+- **禁止**在业务子包下新建 model/ 或其它目录放置 DTO（非 DB 对应实体）
+- **必须**：非 DB 对应的实体（DTO/传输对象/内部模型）一律创建在当前模块的 `model/dto/` 下
+- **命名**：DTO 类名以 `DTO` 结尾（如 `EducationEventAccessDTO`、`SyncResultDTO`）
+- **DB 对应性判断**：有数据库表对应 → `model/entity/`（继承 BaseEntity，无后缀）；无表对应 → `model/dto/`（带 DTO 后缀）
+
 ### api模块
 
 ```
