@@ -71,6 +71,34 @@ userMapper.update(new LambdaUpdateWrapper<UserEntity>()
     .set(UserEntity::getName, "newName"));
 ```
 
+## 批量插入/更新
+
+- 存在批量写入时优先用「真批量」，禁止循环单条 insert/update
+- **批量插入**：用 `insertBatchSomeColumn`（拼接成单条 INSERT SQL），禁止 `saveBatch`（循环单条的伪批量）
+- 生成 Mapper 时默认声明该方法（依赖全局配置的 `InsertBatchSomeColumn` SQL注入器）
+
+```java
+Integer insertBatchSomeColumn(List<UserEntity> list);
+```
+
+- **批量更新**：用自定义 CASE WHEN 将多条 UPDATE 合并为一条 SQL（XML编写，性能最优）
+
+```xml
+<update id="updateBatchById">
+    UPDATE user
+    <trim prefix="SET" suffixOverrides=",">
+        <trim prefix="name = CASE id" suffix="END,">
+            <foreach collection="list" item="item">WHEN #{item.id} THEN #{item.name}</foreach>
+        </trim>
+    </trim>
+    WHERE id IN
+    <foreach collection="list" item="item" open="(" separator="," close=")">#{item.id}</foreach>
+</update>
+```
+
+- `insertBatchSomeColumn` 无参构造会把 null 字段写入 null、覆盖数据库默认值；需保留默认值时用 `new InsertBatchSomeColumn(predicate)` 过滤
+- 仅支持 MySQL；数据量过大时分批（每 1000~10000 条）避免超 `max_allowed_packet`
+
 ## 查询操作
 
 - 禁止在Service层创建QueryWrapper/LambdaQueryWrapper
