@@ -120,6 +120,18 @@ if (CollUtil.isEmpty(ids)) { return Collections.emptyList(); }
 - `of()`/`getDescByCode()`/`getCodeByDesc()`
 - 禁止枚举类内部手写静态方法遍历values()
 
+## 本地缓存
+
+- 本地缓存统一使用 Guava Cache（`CacheBuilder` 构建），禁止基于`ConcurrentHashMap`自行实现过期/容量淘汰
+- 分布式缓存走 Redis，不在此范围
+
+```java
+private final Cache<String, User> cache = CacheBuilder.newBuilder()
+    .maximumSize(1000)
+    .expireAfterWrite(10, TimeUnit.MINUTES)
+    .build();
+```
+
 ## 空值判断
 
 - 禁止手动`!= null` + `isEmpty()/size()`组合判断，统一使用Hutool工具类
