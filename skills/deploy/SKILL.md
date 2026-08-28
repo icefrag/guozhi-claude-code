@@ -1,5 +1,5 @@
 ---
-name: nbl.deploy
+name: deploy
 description: >
   Use when deploying guozhi-series services to dev environments. Triggers on
   "部署", "发布", "deploy", "发布到dev", "上线". Automates git commit/push,

@@ -1,5 +1,5 @@
 ---
-name: nbl.install-rules
+name: install-rules
 description: >
   从 GitHub 仓库安装最新规则文件到本地 ~/.claude/rules/ 目录。
   触发条件：用户请求安装规则、从远程更新本地规则。

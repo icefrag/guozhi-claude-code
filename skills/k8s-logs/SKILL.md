@@ -1,5 +1,5 @@
 ---
-name: nbl.k8s-logs
+name: k8s-logs
 description: 排查 guozhi 项目在 K8s 各环境(dev1/dev2/dev3/fat1/uat)服务日志的专属技能。当用户提到查日志/看日志/app.log/error.log/warn.log/request.log、服务报错/接口失败/超时/500/空指针、某环境(dev1~uat)某服务(guozhi-*)出问题、kexi/kubectl 进 pod 看日志、启动失败/Bean 报错/性能慢/耗时高/Full GC/内存溢出等任何线上/测试环境排查诉求时，必须使用本 skill。本 skill 通过 kubectl 直接操作集群抓取并分析日志、给出结论，用户无需再手动与 kexi 交互。
 ---
 
@@ -33,9 +33,9 @@ description: 排查 guozhi 项目在 K8s 各环境(dev1/dev2/dev3/fat1/uat)服�
 直接调用本 skill 自带的解析脚本，避免每次手写一堆 grep+判断：
 
 ```bash
-bash ./skills/nbl.k8s-logs/scripts/resolve-pod.sh <namespace> <服务关键字>
+bash ./skills/k8s-logs/scripts/resolve-pod.sh <namespace> <服务关键字>
 # 例:
-bash ./skills/nbl.k8s-logs/scripts/resolve-pod.sh guozhi-dev3 common-platform
+bash ./skills/k8s-logs/scripts/resolve-pod.sh guozhi-dev3 common-platform
 ```
 
 - 脚本把选中的 pod 名打印到 **stdout**，诊断信息打印到 **stderr**。

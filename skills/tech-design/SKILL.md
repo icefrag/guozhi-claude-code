@@ -1,5 +1,5 @@
 ---
-name: nbl.tech-design
+name: tech-design
 description: >-
   根据需求描述生成技术设计文档。包含需求背景、架构设计、技术设计、API设计、模型设计等章节。
   触发条件：用户请求技术方案、技术设计文档、API设计、数据库设计等。

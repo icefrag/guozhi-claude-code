@@ -1,5 +1,5 @@
 ---
-name: nbl.refactor-clean
+name: refactor-clean
 description: >
   Java Web 死代码清理和重构专家。安全识别并移除死代码，每一步都进行测试验证。
   触发条件：用户请求清理死代码、重构优化、移除未使用代码。
