@@ -1,28 +1,23 @@
 # nbl.superpowers - Claude Code 扩展技能集
 
-基于官方 [superpowers](https://github.com/obra/superpowers) 技能体系的扩展，重点增强了**多代理并行开发**和**隔离工作区**能力。
-同时整合了 [everything-claude-code](https://github.com/affaan-m/everything-claude-code) 项目中精选的实用技能，如 `/refactor-clean` 死代码清理、`/test-coverage` 测试覆盖率分析
+基于官方 [superpowers](https://github.com/obra/superpowers) 技能体系，与上游 **v6.3.0** 原样对齐（整目录同步，仅 spec/plan 落点调整为 `docs/nbl/`）。
+同时整合了 [everything-claude-code](https://github.com/affaan-m/everything-claude-code) 项目中精选的实用技能（如 `/refactor-clean`、`/tech-design`），并沉淀了面向 guozhi 项目的 `deploy`、`k8s-logs` 等专属技能。
 
 ---
 
 ### 完整开发生命周期
 
 ```
-需求澄清(nbl.brainstorming)
+需求澄清(brainstorming)
   → 输出设计文档
-  → 详细计划(nbl.writing-plans)
-  → 创建隔离工作区(nbl.using-git-worktrees)
-
-if 任务存在依赖关系:
-  → subAgent 顺序执行(nbl.subagent-driven-development)
-else:
-  → 多 subAgent 并行执行(nbl.parallel-subagent-driven-development)
-
-  → 代码审查(nbl.requesting-code-review)
-  → 处理反馈(nbl.receiving-code-review)
+  → 详细计划(writing-plans)
+  → 创建隔离工作区(using-git-worktrees)
+  → subAgent 串行执行(subagent-driven-development) 或 主会话执行(executing-plans)
+  → 代码审查(requesting-code-review)
+  → 处理反馈(receiving-code-review)
   → 人工审核确认
   → 合并到主分支
-  → 清理 worktree(nbl.finishing-a-development-branch)
+  → 清理 worktree(finishing-a-development-branch)
 ```
 
 ---
@@ -53,49 +48,40 @@ else:
 
 ## 🧩 Skills
 
-### 开发工作流
+插件内 skill 调用格式为 `/nbl.superpowers:<skill-name>`，如 `/nbl.superpowers:brainstorming`。
+
+### 开发工作流（同步自上游 superpowers）
 
 按开发阶段排列：
 
 | Skill | 描述 | 阶段 |
 |-------|------|------|
-| **nbl.brainstorming** | 需求澄清和设计文档生成 | 📝 需求 |
-| **nbl.writing-plans** | 分解任务生成详细执行计划 | 📋 规划 |
-| **nbl.using-git-worktrees** | 创建 Git worktree 隔离工作区 | ⚙️ 准备 |
-| **nbl.executing-plans** | 主 Agent 直接执行简单任务 | ▶️ 执行 |
-| **nbl.subagent-driven-development** | SubAgent 串行执行任务 | ▶️ 执行 |
-| **nbl.parallel-subagent-driven-development** | SubAgent 并行执行多个任务 | ▶️ 执行 |
-| **nbl.requesting-code-review** | 请求代码审查 | 🔍 审查 |
-| **nbl.receiving-code-review** | 处理代码审查反馈 | 🔍 审查 |
-| **nbl.finishing-a-development-branch** | 合并清理，完成开发分支 | 🎬 收尾 |
+| **brainstorming** | 需求澄清和设计文档生成（三路径分级） | 📝 需求 |
+| **writing-plans** | 分解任务生成详细执行计划 | 📋 规划 |
+| **using-git-worktrees** | 创建 Git worktree 隔离工作区 | ⚙️ 准备 |
+| **executing-plans** | 独立会话执行计划，带审查检查点 | ▶️ 执行 |
+| **subagent-driven-development** | SubAgent 串行执行任务，单评审双裁决 | ▶️ 执行 |
+| **requesting-code-review** | 请求代码审查 | 🔍 审查 |
+| **receiving-code-review** | 处理代码审查反馈 | 🔍 审查 |
+| **finishing-a-development-branch** | 合并清理，完成开发分支 | 🎬 收尾 |
+| **test-driven-development** | 测试驱动开发（RED-GREEN-REFACTOR） | 🧪 测试 |
+| **systematic-debugging** | 系统化调试，四阶段定位根因 | 🐛 调试 |
+| **verification-before-completion** | 完成声明前必须先跑验证 | ✅ 验证 |
+| **writing-skills** | 技能编写与测试工具 | ✍️ 技能开发 |
 
-### 独立工具 Skills
+### 独立工具 Skills（nbl 自有）
 
 这些是可独立使用的工具技能：
 
 | Skill | 描述 | 触发场景 |
 |-------|------|---------|
-| **nbl.refactor-clean** | Java Web 死代码清理和重构专家 | 清理未使用代码、重构优化 |
-| **nbl.test-coverage** | 测试覆盖率分析，生成缺失测试 | 提升测试覆盖率 |
-| **nbl.tech-design** | 根据需求生成技术设计文档 | 技术方案、API 设计、数据库设计 |
-| **nbl.deep-research** | 多源深度网络研究 | 需要调研收集信息 |
-| **nbl.status-line** | 自定义 Claude Code 状态栏 | 安装显示模型 / Git / 上下文 / 成本 / worktree 信息 |
-
----
-
-## 📊 nbl.status-line 效果展示
-
-**nbl.status-line** 是一个自定义状态栏脚本，安装后会在 Claude Code 每次响应前显示：
-
-```
-[Haiku 4.5] 📁 nbl.superpowers | 🌿 main clean
-██░░░░░░░░ 15% | $0.12 | ⏱️ 0m 50s
- Worktrees:
-   1. feature-auth → fix-login +2~1?3
-   2. feature-api → main clean
-```
-
-显示内容：模型名称、项目名、Git 分支及状态（+staged ~modified ?untracked）、上下文使用率进度条、费用累计、会话耗时，以及所有 worktree 列表。
+| **deploy** | 自动化发布 guozhi 系列服务到 dev 环境 | 部署、发布、deploy、上线 |
+| **k8s-logs** | 排查 guozhi 项目 K8s 各环境服务日志 | 查日志、服务报错、环境排查 |
+| **deep-research** | 多源深度网络研究，输出带引用的报告 | 需要调研收集信息 |
+| **edit-rules** | 管理 rules/common/ 规则文件的编辑 | 修改规则、修改编码规范 |
+| **install-rules** | 从 GitHub 安装最新规则到本地 ~/.claude/rules/ | 安装规则、更新本地规则 |
+| **refactor-clean** | Java Web 死代码清理和重构专家 | 清理未使用代码、重构优化 |
+| **tech-design** | 根据需求生成技术设计文档 | 技术方案、API 设计、数据库设计 |
 
 ---
 
@@ -103,25 +89,28 @@ else:
 
 ```
 skills/
-├── nbl.brainstorming/               # 需求澄清和设计
-├── nbl.writing-plans/               # 详细执行计划
-├── nbl.using-git-worktrees/         # Git worktree 隔离工作区
-├── nbl.executing-plans/             # 主 Agent 直接执行
-├── nbl.subagent-driven-development/ # SubAgent 串行执行
-├── nbl.parallel-subagent-driven-development/ # SubAgent 并行执行
-├── nbl.requesting-code-review/      # 请求代码审查
-├── nbl.receiving-code-review/       # 处理代码审查反馈
-├── nbl.finishing-a-development-branch/ # 完成开发分支
-├── nbl.refactor-clean/              # Java Web 死代码清理
-├── nbl.test-coverage/               # 测试覆盖率分析
-├── nbl.tech-design/                 # 技术设计文档生成
-├── nbl.deep-research/               # 多源深度研究
-├── nbl.status-line/                 # 自定义状态栏
-├── nbl.writing-skills/              # 技能开发工具
-└── nbl.test-driven-development/     # 测试驱动开发
+├── brainstorming/                  # 需求澄清和设计
+├── writing-plans/                  # 详细执行计划
+├── using-git-worktrees/            # Git worktree 隔离工作区
+├── executing-plans/                # 主会话执行计划
+├── subagent-driven-development/    # SubAgent 串行执行
+├── requesting-code-review/         # 请求代码审查
+├── receiving-code-review/          # 处理审查反馈
+├── finishing-a-development-branch/ # 完成开发分支
+├── test-driven-development/        # 测试驱动开发
+├── systematic-debugging/           # 系统化调试
+├── verification-before-completion/ # 完成前验证
+├── writing-skills/                 # 技能开发工具
+├── deploy/                         # dev 环境自动化部署
+├── k8s-logs/                       # K8s 日志排查
+├── deep-research/                  # 多源深度研究
+├── edit-rules/                     # 规则文件管理
+├── install-rules/                  # 规则安装
+├── refactor-clean/                 # Java Web 死代码清理
+└── tech-design/                    # 技术设计文档生成
 
 rules/
-└── common/                          # 开发规范规则集（示例管理，需手动拷贝到 ~/.claude/rules/ 生效）
+└── common/                         # 开发规范规则集（示例管理，需手动拷贝到 ~/.claude/rules/ 生效）
 ```
 
 ---
@@ -130,12 +119,12 @@ rules/
 
 | 特性 | 说明 |
 |------|------|
+| **原样同步** | 与上游 superpowers 整目录对齐，diff 干净，后续同步成本≈零 |
 | **物理隔离** | Git worktree 级别的隔离，多个任务完全不干扰 |
-| **并行开发** | 多 subAgent 同时执行多个独立任务，充分利用 Claude Code 能力 |
 | **安全审核** | 代码在 worktree 开发完成，人工审核后才合并到主分支 |
-| **多会话支持** | 支持同时打开多个 Claude Code 会话并行处理多个需求 |
 | **兼容官方** | 所有技能遵循官方 superpowers 设计原则，学习成本低 |
-| **生态整合** | 整合了 [everything-claude-code](https://github.com/affaan-m/everything-claude-code) 项目中精选的实用技能，如 `nbl.refactor-clean` 死代码清理、`nbl.tech-design` 技术文档生成、`nbl.test-coverage` 测试覆盖率分析等 |
+| **生态整合** | 整合了 [everything-claude-code](https://github.com/affaan-m/everything-claude-code) 项目中精选的实用技能，如 `refactor-clean` 死代码清理、`tech-design` 技术文档生成等 |
+| **领域沉淀** | 面向 guozhi 项目的专属技能：`deploy` 自动化部署、`k8s-logs` 日志排查 |
 
 ---
 
