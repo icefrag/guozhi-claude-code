@@ -31,21 +31,24 @@
 | D9 | AGENTS.md 导出：仅行为准则（`~/.zcode/AGENTS.md` 第 1–91 行），其余全不带 |
 | D10 | 唯一内容规则：文内 `docs/superpowers/` → `docs/nbl/`（spec/plan 落点） |
 | D11 | 删除 `nbl.status-line` 与 `nbl.evolve` 两个 skill（大王 2026-08-28 追加） |
+| D12 | 删除 `nbl.java-spring-integration-testing` skill（大王 2026-08-28 追加） |
+| D13 | 删除 `nbl.test-coverage` skill（大王 2026-08-28 追加；其对已删 java-spring-integration-testing 的引用随之消失） |
 
-## Skill 清单终态（21 个，全部平名）
+## Skill 清单终态（19 个，全部平名）
 
 **上游原样复制（12 个）**：brainstorming、executing-plans、finishing-a-development-branch、receiving-code-review、requesting-code-review、subagent-driven-development、systematic-debugging、test-driven-development、using-git-worktrees、verification-before-completion、writing-plans、writing-skills
 
-**nbl 自有改名（9 个）**：deploy、k8s-logs、deep-research、edit-rules、install-rules、java-spring-integration-testing、refactor-clean、tech-design、test-coverage
+**nbl 自有改名（7 个）**：deploy、k8s-logs、deep-research、edit-rules、install-rules、refactor-clean、tech-design
 
-**删除（3 个）**：nbl.parallel-subagent-driven-development、nbl.status-line、nbl.evolve
+**删除（5 个）**：nbl.parallel-subagent-driven-development、nbl.status-line、nbl.evolve、nbl.java-spring-integration-testing、nbl.test-coverage
 
 ## 设计
 
-### Phase 1：skill 删除（3 个）
+### Phase 1：skill 删除（5 个）
 
-- 删除 `skills/nbl.parallel-subagent-driven-development/`、`skills/nbl.status-line/`、`skills/nbl.evolve/` 三个整目录。
-- README.md 引用清理：parallel 3 处（执行流程行、skill 总表行、目录树行，约 L19/L67/L111）；status-line 4 处（总表行 L82、「📊 nbl.status-line 效果展示」章节 L86–88、目录树行 L119）。evolve 经 grep 确认 README 与其他 skill 零引用，无需清理。
+- 删除 `skills/nbl.parallel-subagent-driven-development/`、`skills/nbl.status-line/`、`skills/nbl.evolve/`、`skills/nbl.java-spring-integration-testing/`、`skills/nbl.test-coverage/` 五个整目录。
+- 连带引用清理：
+  - README.md：parallel 3 处（执行流程行、skill 总表行、目录树行，约 L19/L67/L111）；status-line 4 处（总表行 L82、「📊 nbl.status-line 效果展示」章节 L86–88、目录树行 L119）；test-coverage 4 处（开头介绍 L4、总表行 L79、目录树行 L116、生态整合行 L138——该行与 refactor-clean/tech-design 并列提及，需改写而非整行删）。evolve 与 java-spring-integration-testing 经 grep 确认 README 无引用；java-spring-integration-testing 在 test-coverage 内的引用随该 skill 删除自然消失。
 - CLAUDE.md 中「子任务合并 (parallel mode)」行随 Phase 4 的 Worktree 章节重写一并处理，不单独手术。
 - 说明：writing-plans / finishing / SDD / using-git-worktrees 里的 parallel 内容随 Phase 2 原样复制自然消失，不做重复手术。
 
@@ -62,7 +65,7 @@
 ### Phase 3：全量去前缀改名
 
 - 9 个自有 skill 目录 `git mv skills/nbl.<name> skills/<name>`；每个 SKILL.md frontmatter `name: nbl.<name>` → `name: <name>`。
-- 全仓 sweep：精确匹配 **21 个旧名**（9 个自有旧名 + 12 个同源 skill 旧名，如 `nbl.using-git-worktrees`）`nbl.<name>` → `<name>`，覆盖 skills/ 交叉引用、README.md、CLAUDE.md、rules/common/*.md（如有）、scripts 内字符串（如调用格式 `/nbl.superpowers:nbl.k8s-logs` → `/nbl.superpowers:k8s-logs`）。
+- 全仓 sweep：精确匹配 **19 个旧名**（7 个自有旧名 + 12 个同源 skill 旧名，如 `nbl.using-git-worktrees`）`nbl.<name>` → `<name>`，覆盖 skills/ 交叉引用、README.md、CLAUDE.md、rules/common/*.md（如有）、scripts 内字符串（如调用格式 `/nbl.superpowers:nbl.k8s-logs` → `/nbl.superpowers:k8s-logs`）。
 - 白名单（禁止改动）：插件名 `nbl.superpowers`、`docs/nbl/` 与 `.nbl` 形态路径（`nbl/` 不含点号，天然不匹配 `nbl.<name>` 模式，但仍列入白名单防误伤）。
 - 历史文档（docs/nbl/specs、docs/nbl/plans 下的旧文档）中的旧 skill 名**不回改**，按项目惯例仅作历史线索。
 
@@ -72,7 +75,7 @@
   - 「Worktree 操作规范」：删 3 行命令表（上游无此 CLI 子命令），保留「worktree 操作必须通过 using-git-worktrees skill 执行」的原则表述，指向新 skill 名。
   - 「能力比对排除项」：删 Visual Companion 条目（D5 反转）。
   - 其余章节（本地开发参考、版本更新、Skill 开发规范）保留不动。
-- README.md：**逐 skill 校准**（大王特别嘱咐）——skill 总表按两组重写（上游同步 12 个 + nbl 自有 9 个，全部新命名、描述与实际 SKILL.md description 一致），目录树更新，删除 parallel 与 status-line 相关内容（含「效果展示」章节），确保 README 与 skills/ 目录实际状态一一对应。
+- README.md：**逐 skill 校准**（大王特别嘱咐）——skill 总表按两组重写（上游同步 12 个 + nbl 自有 7 个，全部新命名、描述与实际 SKILL.md description 一致），目录树更新，删除 parallel、status-line、test-coverage 相关内容（含「效果展示」章节），确保 README 与 skills/ 目录实际状态一一对应。
 
 ### Phase 5：AGENTS.md 导出
 
@@ -83,9 +86,9 @@
 
 - 版本号 6.26.0 → **7.0.0**（skill 改名 + 功能删除，破坏性变更），`.claude-plugin/plugin.json` 与 `.claude-plugin/marketplace.json` 两处同步。
 - 验证清单：
-  1. `ls skills/` 共 21 个目录，全部无 `nbl.` 前缀；
+  1. `ls skills/` 共 19 个目录，全部无 `nbl.` 前缀；
   2. 每个 SKILL.md 的 `name:` 与目录名一致；
-  3. 精确 grep 21 个旧名 `nbl.<name>`，skills/、README.md、CLAUDE.md、rules/、scripts 内命中数为 0；
+  3. 精确 grep 19 个旧名 `nbl.<name>`，skills/、README.md、CLAUDE.md、rules/、scripts 内命中数为 0；
   4. `grep -rni "parallel" skills/ README.md CLAUDE.md` 仅允许 legitimate 命中（如上游 SDD 中 "parallel session" 指另一会话执行 executing-plans，非并行执行功能）；deleted skill 名 `parallel-subagent-driven-development` 命中数为 0（历史文档除外）；
   5. 保留的 scripts 语法检查：`bash -n`（k8s-logs、SDD scripts 等），`node --check`（render-graphs.js）；
   6. 两处版本号一致且为 7.0.0。
