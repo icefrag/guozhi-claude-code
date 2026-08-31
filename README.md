@@ -78,8 +78,6 @@
 | **deploy** | 自动化发布 guozhi 系列服务到 dev 环境 | 部署、发布、deploy、上线 |
 | **k8s-logs** | 排查 guozhi 项目 K8s 各环境服务日志 | 查日志、服务报错、环境排查 |
 | **deep-research** | 多源深度网络研究，输出带引用的报告 | 需要调研收集信息 |
-| **edit-rules** | 管理 rules/common/ 规则文件的编辑 | 修改规则、修改编码规范 |
-| **install-rules** | 从 GitHub 安装最新规则到本地 ~/.claude/rules/ | 安装规则、更新本地规则 |
 | **refactor-clean** | Java Web 死代码清理和重构专家 | 清理未使用代码、重构优化 |
 | **tech-design** | 根据需求生成技术设计文档 | 技术方案、API 设计、数据库设计 |
 | **code-simplifier** | 不改变行为的前提下简化代码，提升可读性 | 代码重构、清理累积的复杂度 |
@@ -106,8 +104,6 @@ skills/
 ├── deploy/                         # dev 环境自动化部署
 ├── k8s-logs/                       # K8s 日志排查
 ├── deep-research/                  # 多源深度研究
-├── edit-rules/                     # 规则文件管理
-├── install-rules/                  # 规则安装
 ├── refactor-clean/                 # Java Web 死代码清理
 ├── tech-design/                    # 技术设计文档生成
 ├── code-simplifier/                # 代码简化（保持行为不变）
