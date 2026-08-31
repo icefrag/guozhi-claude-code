@@ -82,6 +82,8 @@
 | **install-rules** | 从 GitHub 安装最新规则到本地 ~/.claude/rules/ | 安装规则、更新本地规则 |
 | **refactor-clean** | Java Web 死代码清理和重构专家 | 清理未使用代码、重构优化 |
 | **tech-design** | 根据需求生成技术设计文档 | 技术方案、API 设计、数据库设计 |
+| **code-simplifier** | 不改变行为的前提下简化代码，提升可读性 | 代码重构、清理累积的复杂度 |
+| **review** | 合并前的多维度代码审查（正确性/可读性/架构/安全/性能） | 合并前审查、评估任何来源的代码 |
 
 ---
 
@@ -107,7 +109,9 @@ skills/
 ├── edit-rules/                     # 规则文件管理
 ├── install-rules/                  # 规则安装
 ├── refactor-clean/                 # Java Web 死代码清理
-└── tech-design/                    # 技术设计文档生成
+├── tech-design/                    # 技术设计文档生成
+├── code-simplifier/                # 代码简化（保持行为不变）
+└── review/                         # 多维度代码审查
 
 rules/
 └── common/                         # 开发规范规则集（示例管理，需手动拷贝到 ~/.claude/rules/ 生效）
