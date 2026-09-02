@@ -89,3 +89,9 @@ A report names a symptom. Before you edit, grep every caller of the function you
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+## 项目规则：skill 搬运
+
+- 从外部仓库搬运/移植 skill 到本仓库时，skill 本体（SKILL.md 及附属文件）必须**原样复制**：禁止翻译、禁止改写、禁止自行"适配"（加步骤、换措辞、换语言都不行）。
+- 用 `cp` 复制后必须 `diff` 源文件验证逐字节一致。
+- 仓库侧元数据（README 描述行、plugin.json 版本号）不受此限，按本仓库惯例正常维护。
