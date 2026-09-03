@@ -82,6 +82,7 @@
 | **tech-design** | 根据需求生成技术设计文档 | 技术方案、API 设计、数据库设计 |
 | **code-simplifier** | 不改变行为的前提下简化代码，提升可读性 | 代码重构、清理累积的复杂度 |
 | **review** | 合并前的多维度代码审查（正确性/可读性/架构/安全/性能） | 合并前审查、评估任何来源的代码 |
+| **review-dispatch** | 评审调度：小 diff 主会话内联评审，大 diff 派 agent 并喂现成评审包（diff+意图+测试结果） | 执行 code review、派评审/复审 agent |
 | **resolving-merge-conflicts** | 解决 merge/rebase 冲突，意图溯源 + 语义解决（移植自 Matt Pocock） | merge 冲突、rebase 冲突、CONFLICT |
 
 ---
@@ -109,6 +110,7 @@ skills/
 ├── tech-design/                    # 技术设计文档生成
 ├── code-simplifier/                # 代码简化（保持行为不变）
 ├── review/                         # 多维度代码审查
+├── review-dispatch/                # 评审调度（内联 / 派发 + 评审包）
 └── resolving-merge-conflicts/      # merge/rebase 冲突解决（意图溯源）
 
 rules/
