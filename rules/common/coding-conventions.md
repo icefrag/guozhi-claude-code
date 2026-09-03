@@ -258,10 +258,6 @@ query.setTenantId(UserHolder.getTenantIdLong());
 - Queue：`guozhi_v2_{业务描述}_queue`（如 guozhi_v2_third_auth_event_queue）
 - RoutingKey：`guozhi.edu.{业务描述}`（如 guozhi.edu.tenant.lifecycle）
 
-## 事件发布
-
-- 统一使用`EventUtil.publishEvent()`，禁止`ApplicationContext.publishEvent()`等
-
 ## 类引用
 
 - 禁止使用完整包路径，必须import后直接用类名
