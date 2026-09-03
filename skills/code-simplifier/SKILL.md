@@ -132,23 +132,32 @@ Scan for these patterns — each one is a concrete signal, not a vague smell:
 
 ### Step 3: Apply Changes Incrementally
 
-Make one simplification at a time. Run tests after each change. **Submit refactoring changes separately from feature or bug fix changes.** A PR that refactors and adds a feature is two PRs — split them.
+Make one simplification at a time, but verify in tiers — running the full test suite after every change is how a simplification pass becomes a waiting contest. Simplifications are behavior-preserving edits; match each tier to the project's fastest effective check (consult the project's AGENTS.md for the exact commands — e.g. Maven multi-module: compile one module per change, test one module per batch).
 
 ```
 FOR EACH SIMPLIFICATION:
 1. Make the change
-2. Run the test suite (no tests? verify the build compiles and run a minimal runnable check)
-3. If tests pass → commit (or continue to next simplification)
-4. If tests fail → revert and reconsider
+2. Compile the affected module only — seconds, not minutes; no tests yet
+3. Commit the simplification
+
+FOR EACH BATCH OF 3–5 SIMPLIFICATIONS:
+4. Run that module's tests
+5. If a batch fails → revert the batch, re-apply one simplification at a
+   time with tests to find the culprit, then continue
+
+AFTER ALL SIMPLIFICATIONS:
+6. Run the full test suite once (Step 4)
 ```
 
-Avoid batching multiple simplifications into a single untested change. If something breaks, you need to know which simplification caused it.
+Tiered verification batches the test runs, not the edits — each simplification is still its own edit and commit, so a failing batch bisects one commit at a time. The small batch size keeps that bisect cheap; a full-suite run per simplification buys pinpointing you rarely need at a waiting cost you always pay.
+
+**Submit refactoring changes separately from feature or bug fix changes.** A PR that refactors and adds a feature is two PRs — split them.
 
 **The Rule of 500:** If a refactoring would touch more than 500 lines, invest in automation (codemods, sed scripts, AST transforms) rather than making the changes by hand. Manual edits at that scale are error-prone and exhausting to review.
 
 ### Step 4: Verify the Result
 
-After all simplifications, step back and evaluate the whole:
+After all simplifications, run the full test suite once — the bottom-line check the per-change tiers deferred — then step back and evaluate the whole:
 
 ```
 COMPARE BEFORE AND AFTER:
@@ -198,6 +207,7 @@ The patterns below apply in any language — the syntax differs (Python comprehe
 After completing a simplification pass:
 
 - [ ] All existing tests pass without modification (no-test projects: build compiles and a minimal runnable check passes)
+- [ ] The full test suite ran once after the last simplification — per-batch module tests alone don't count
 - [ ] Build succeeds with no new warnings
 - [ ] Linter/formatter passes (no style regressions)
 - [ ] Each simplification is a reviewable, incremental change
@@ -207,4 +217,4 @@ After completing a simplification pass:
 - [ ] No dead code was left behind (unused imports, unreachable branches)
 - [ ] A teammate or review agent would approve the change as a net improvement
 
-After the checklist passes, review the result with the `review` skill (or an equivalent review pass).
+After the checklist passes, review the result through the [review-dispatch](../review-dispatch/SKILL.md) skill: simplification diffs are usually small enough to review inline in the main session; larger ones get dispatched with a ready-made review package.
