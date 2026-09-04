@@ -114,7 +114,7 @@ skills/
 └── resolving-merge-conflicts/      # merge/rebase 冲突解决（意图溯源）
 
 agents/
-└── AGENTS.md                       # 全局 AGENTS.md 源文件（修改后需拷贝到 ~/.zcode/AGENTS.md 生效）
+└── AGENTS.md                       # 全局 AGENTS.md 源文件（~/.zcode/AGENTS.md 为指向此处的符号链接，改动即时生效）
 ```
 
 ---
