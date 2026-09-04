@@ -1,7 +1,7 @@
 # nbl.superpowers - Claude Code 扩展技能集
 
 基于官方 [superpowers](https://github.com/obra/superpowers) 技能体系，与上游 **v6.3.0** 原样对齐（整目录同步，仅 spec/plan 落点调整为 `docs/nbl/`）。
-同时整合了 [everything-claude-code](https://github.com/affaan-m/everything-claude-code) 项目中精选的实用技能（如 `/refactor-clean`、`/tech-design`），并沉淀了面向 guozhi 项目的 `deploy`、`k8s-logs` 等专属技能。
+同时整合了 [everything-claude-code](https://github.com/affaan-m/everything-claude-code) 项目中精选的实用技能（如 `/refactor-clean`），并沉淀了面向 guozhi 项目的 `deploy`、`k8s-logs`、`dev-standards` 等专属技能。
 
 ---
 
@@ -79,7 +79,7 @@
 | **k8s-logs** | 排查 guozhi 项目 K8s 各环境服务日志 | 查日志、服务报错、环境排查 |
 | **deep-research** | 多源深度网络研究，输出带引用的报告 | 需要调研收集信息 |
 | **refactor-clean** | Java Web 死代码清理和重构专家 | 清理未使用代码、重构优化 |
-| **tech-design** | 根据需求生成技术设计文档 | 技术方案、API 设计、数据库设计 |
+| **dev-standards** | guozhi 开发规范总入口（架构/编码/命名/测试，按场景动态加载） | 编写/修改/review Java、SQL、XML，写技术设计文档 |
 | **code-simplifier** | 不改变行为的前提下简化代码，提升可读性 | 代码重构、清理累积的复杂度 |
 | **review** | 合并前的多维度代码审查（正确性/可读性/架构/安全/性能） | 合并前审查、评估任何来源的代码 |
 | **review-dispatch** | 评审调度：小 diff 主会话内联评审，大 diff 派 agent 并喂现成评审包（diff+意图+测试结果） | 执行 code review、派评审/复审 agent |
@@ -107,14 +107,14 @@ skills/
 ├── k8s-logs/                       # K8s 日志排查
 ├── deep-research/                  # 多源深度研究
 ├── refactor-clean/                 # Java Web 死代码清理
-├── tech-design/                    # 技术设计文档生成
+├── dev-standards/                  # guozhi 开发规范（架构/编码/命名/测试，按需加载）
 ├── code-simplifier/                # 代码简化（保持行为不变）
 ├── review/                         # 多维度代码审查
 ├── review-dispatch/                # 评审调度（内联 / 派发 + 评审包）
 └── resolving-merge-conflicts/      # merge/rebase 冲突解决（意图溯源）
 
-rules/
-└── common/                         # 开发规范规则集（示例管理，需手动拷贝到 ~/.claude/rules/ 生效）
+agents/
+└── AGENTS.md                       # 全局 AGENTS.md 源文件（修改后需拷贝到 ~/.zcode/AGENTS.md 生效）
 ```
 
 ---
@@ -127,7 +127,7 @@ rules/
 | **物理隔离** | Git worktree 级别的隔离，多个任务完全不干扰 |
 | **安全审核** | 代码在 worktree 开发完成，人工审核后才合并到主分支 |
 | **兼容官方** | 所有技能遵循官方 superpowers 设计原则，学习成本低 |
-| **生态整合** | 整合了 [everything-claude-code](https://github.com/affaan-m/everything-claude-code) 项目中精选的实用技能，如 `refactor-clean` 死代码清理、`tech-design` 技术文档生成等 |
+| **生态整合** | 整合了 [everything-claude-code](https://github.com/affaan-m/everything-claude-code) 项目中精选的实用技能，如 `refactor-clean` 死代码清理等 |
 | **领域沉淀** | 面向 guozhi 项目的专属技能：`deploy` 自动化部署、`k8s-logs` 日志排查 |
 
 ---

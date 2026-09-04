@@ -1,9 +1,3 @@
----
-paths:
-  - "**/*Test*.java"
-  - "**/*Tests*.java"
-  - "**/test/**/*.java"
----
 
 # 测试要求
 
