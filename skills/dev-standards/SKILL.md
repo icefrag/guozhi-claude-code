@@ -1,7 +1,7 @@
 ---
 name: dev-standards
 description: >
-  guozhi 项目开发规范唯一入口（架构原则/开发规范/命名规范/测试要求，按场景动态加载）。
+  guozhi 项目开发规范唯一入口（架构原则/开发规范/命名规范，按场景动态加载）。
   触发条件：在 guozhi 项目中编写、修改、重构或 review 任何 Java/SQL/Mapper XML 代码之前；
   撰写技术设计文档、技术方案之前；设计新服务、新模块、新接口、新表之前。
   必须先调起本 skill 并按路由表读取对应规范文件后再动手。
@@ -20,7 +20,6 @@ description: >
 | 技术设计文档/技术方案、新服务或新模块定位、架构分层、包结构设计 | `architecture.md` |
 | 编写/修改 Java 代码、SQL 建表/DML、Mapper XML | `coding-conventions.md` |
 | 新建类/接口/枚举/Req/Resp/Entity 或其字段命名 | `naming.md` |
-| 编写或修改测试 | `testing.md` |
 
 实现一个新功能通常 = architecture + coding-conventions + naming 三份全读。
 
