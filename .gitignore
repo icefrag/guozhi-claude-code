@@ -4,9 +4,8 @@
 .vscode/
 
 # Docs
-docs/
 .worktrees/
 **/CLAUDE.md
 **/claude.md
 .worktrees/
-test/
+test/.claude/worktrees/
